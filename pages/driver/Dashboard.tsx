@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { redirect } from "next/navigation"
 import { Bell, ChevronLeft, LogOut, Menu, Moon, Sun, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -17,22 +18,22 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { OrdersProvider, useOrders } from "@/contexts/orders-context"
+import { logout } from "@/lib/actions"
+import { getUserFromCookie } from "@/lib/auth"
 
-interface DashboardProps {
-    onLogout: () => void
-}
 
-export default function Dashboard({ onLogout }: DashboardProps) {
+export default function Dashboard() {
     return (
         <OrdersProvider>
-            <DashboardContent onLogout={onLogout} />
+            <DashboardContent />
         </OrdersProvider>
     )
 }
 
-function DashboardContent({ onLogout }: DashboardProps) {
+function DashboardContent() {
     const { orders } = useOrders()
     const [selectedOrder, setSelectedOrder] = useState<string | null>(null)
+    const [user, setUser] = useState<any | null>(null)
 
     const handleOrderSelect = (orderId: string) => {
         setSelectedOrder(orderId)
@@ -43,7 +44,8 @@ function DashboardContent({ onLogout }: DashboardProps) {
     }
 
     const handleLogout = () => {
-        onLogout()
+        logout()
+        redirect("/login")
     }
 
     const pendingOrders = orders.filter((order) => order.status === "pending")
