@@ -20,9 +20,39 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  register: (
+    identifier: string,
+    password: string,
+    role: string | undefined,
+    type: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const handleAuthResponse = (response: any) => {
+  const { data = {} } = response.data;
+  const { identifier, type, category, token = null } = data;
+
+  const roleMap: Record<string, UserRole> = {
+    customers: "customer",
+    drivers: "driver",
+    restaurants: "restaurant",
+    super_admins: "admin",
+    admins: "admin",
+  };
+
+  const role = roleMap[category];
+
+  const user = {
+    identifier,
+    type,
+    role,
+    token,
+  };
+
+  return user;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -31,19 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const fetchUserSession = async () => {
-      try {
-        const storedUser = await getUserSession();
-        if (storedUser) {
-          console.log("Stored user session:", storedUser);
-          setUser(storedUser);
-        } else {
-          router.push("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user session:", error);
-      } finally {
-        setIsLoading(false);
+      console.log("Fetching user session...");
+      const storedUser = await getUserSession();
+      const token = storedUser?.token || null;
+      if (token) {
+        setUser(storedUser);
+        router.push(getRouteForRole(storedUser.role));
+      } else {
+        console.log("No user session found, redirecting to login.");
+        setUser(null);
+        router.push("/login");
       }
+      setIsLoading(true);
     };
 
     fetchUserSession();
@@ -63,26 +92,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password: btoa(password), // Encode password in Base64
       });
 
-      const { data } = response.data;
+      const user = handleAuthResponse(response);
+      setUser(user);
+      await setUserSession(user);
 
-      const { token, identifier, type, category } = data;
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      return { success: false, error: errorMessage };
+    }
+  };
 
-      const roleMap: Record<string, UserRole> = {
-        customers: "customer",
-        drivers: "driver",
-        restaurants: "restaurant",
-        super_admins: "admin",
-        admins: "admin",
-      };
-
-      const role = roleMap[category];
-
-      const user = {
-        identifier,
+  // Register function (if needed)
+  const register = async (
+    identifier: string,
+    password: string,
+    role: string | undefined,
+    type: string | undefined,
+  ) => {
+    try {
+      const response = await axiosInstance.post<{
+        data: {
+          identifier: string;
+          type: string;
+          category: string;
+        };
+      }>("/auth/v1/register", {
+        [`${type}`]: identifier,
+        password: btoa(password), // Encode password in Base64
         type,
-        role,
-        token,
-      };
+        category: role,
+      });
+
+      const user = handleAuthResponse(response);
 
       setUser(user);
       await setUserSession(user);
@@ -104,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
