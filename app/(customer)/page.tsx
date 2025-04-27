@@ -1,3 +1,4 @@
+'use client'
 import Link from "next/link"
 import Image from "next/image"
 import { Search, ArrowRight } from "lucide-react"
@@ -6,8 +7,40 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import RestaurantCard from "@/components/restaurant-card"
 import { restaurants } from "@/lib/data"
+import { useEffect, useState } from "react"
+import { getAllOrders } from "@/lib/api/orderApi"
 
 export default function Home() {
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        const response = await getAllOrders();
+        if (response.data) {
+          setOrders(response.data);
+        }
+      } catch (err: any) {
+        if (err.response) {
+          const { data } = err.response;
+
+          if (data && data.message) {
+            console.log(`Order Details Fetching Faild: ${data.message}`);
+          } else {
+            console.log("An unexpected error occurred. Please try again.");
+          }
+        } else {
+          console.log(
+            "An unexpected error occurred. Please check your network and try again."
+          );
+        }
+      }
+    };
+
+    fetchOrderDetails();
+  }, []);
+
+
   return (
     <div>
       {/* Hero Section with Background */}
