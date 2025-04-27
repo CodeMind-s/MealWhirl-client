@@ -33,7 +33,7 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const result = await register(name, email, password, role)
+      const result = await register(email, password, role, "email")
 
       if (!result.success) {
         toast({
@@ -72,25 +72,6 @@ export default function RegisterPage() {
           <div className="h-2 primary-bg"></div>
           <div className="px-8 py-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Full Name
-                </Label>
-                <div className="mt-1">
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={isLoading}
-                    className="shadow-sm focus:ring-brand-blue focus:border-brand-blue block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
@@ -134,11 +115,11 @@ export default function RegisterPage() {
                 <Label className="block text-sm font-medium text-gray-700 mb-2">Account Type</Label>
                 <RadioGroup value={role} onValueChange={(value) => setRole(value as "customer" | "restaurant")}>
                   <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value="customer" id="customer" />
+                    <RadioGroupItem value="customers" id="customer" />
                     <Label htmlFor="customer">Customer</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="restaurant" id="restaurant" />
+                    <RadioGroupItem value="restaurants" id="restaurant" />
                     <Label htmlFor="restaurant">Restaurant</Label>
                   </div>
                 </RadioGroup>

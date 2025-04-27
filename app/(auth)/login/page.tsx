@@ -1,11 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-// import { useAuth, getRouteForRole } from "@/contexts/auth-context"
+import { useAuth, getRouteForRole } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,48 +14,47 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  // const { user, login } = useAuth()
+  const { user, login } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
 
-  // useEffect(() => {
-  //   if (user) {
-  //     router.push(getRouteForRole(user.role))
-  //   }
-  // }, [user, router])
+  useEffect(() => {
+    if (user) {
+      router.push(getRouteForRole(user.role))
+    }
+  }, [user, router])
 
-  // async function handleSubmit(e: React.FormEvent) {
-  //   e.preventDefault()
-  //   setIsLoading(true)
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setIsLoading(true)
 
-  //   try {
-  //     const result = await login(email, password)
+    try {
+      const result = await login(email, password)
 
-  //     if (!result.success) {
-  //       toast({
-  //         title: "Error",
-  //         description: result.error || "Invalid credentials",
-  //         variant: "destructive",
-  //       })
-  //       setIsLoading(false)
-  //       return
-  //     }
+      if (!result.success) {
+        toast({
+          title: "Error",
+          description: result.error || "Invalid credentials",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
 
-  //     toast({
-  //       title: "Success",
-  //       description: "You have been logged in successfully.",
-  //     })
+      toast({
+        title: "Success",
+        description: "You have been logged in successfully.",
+      })
 
-  //     // Router will redirect based on the useEffect above
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Something went wrong. Please try again.",
-  //       variant: "destructive",
-  //     })
-  //     setIsLoading(false)
-  //   }
-  // }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen pattern-bg flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -68,7 +66,7 @@ export default function LoginPage() {
               <h1 className="text-3xl font-bold primary-text mb-2">Welcome To MealWhirl</h1>
               <p className="text-gray-600">Sign in to access your account</p>
             </div>
-            <form onSubmit={() => { }} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address

@@ -1,161 +1,178 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
-import Cookies from "js-cookie"
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
+import { User, UserRole } from "@/types/User";
+import axiosInstance from "@/lib/middleware/axioinstance";
+import { getUserSession, setUserSession } from "@/lib/middleware/auth";
 
-// Define user types
-export type UserRole = "customer" | "driver" | "restaurant" | "admin"
-
-export interface User {
-  email: string
-  name: string
-  role: UserRole
-}
-
-// Define auth context type
 interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  register: (
-    name: string,
+  user: User | null;
+  login: (
     email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  isLoading: boolean;
+  register: (
+    identifier: string,
     password: string,
-    role: "customer" | "restaurant",
-  ) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
-  isLoading: boolean
+    role: string | undefined,
+    type: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
-// Create context
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hardcoded user credentials for frontend development
-const USERS = [
-  {
-    email: "cust.test@mail.com",
-    password: "cust123",
-    name: "Test Customer",
-    role: "customer" as UserRole,
-  },
-  {
-    email: "driver.test@mail.com",
-    password: "driver123",
-    name: "Test Driver",
-    role: "driver" as UserRole,
-  },
-  {
-    email: "rest.test@mail.com",
-    password: "rest123",
-    name: "Test Restaurant",
-    role: "restaurant" as UserRole,
-  },
-  {
-    email: "admin.test@mail.com",
-    password: "admin123",
-    name: "System Admin",
-    role: "admin" as UserRole,
-  },
-]
+const handleAuthResponse = (response: any) => {
+  const { data = {} } = response.data;
+  const { identifier, type, category, token = null } = data;
 
-// Auth provider component
+  const roleMap: Record<string, UserRole> = {
+    customers: "customer",
+    drivers: "driver",
+    restaurants: "restaurant",
+    super_admins: "admin",
+    admins: "admin",
+  };
+
+  const role = roleMap[category];
+
+  const user = {
+    identifier,
+    type,
+    role,
+    token,
+  };
+
+  return user;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [users, setUsers] = useState(USERS)
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  // Check for existing session on mount
   useEffect(() => {
-    const storedUser = Cookies.get("user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
-    }
-    setIsLoading(false)
-  }, [])
+    const fetchUserSession = async () => {
+      console.log("Fetching user session...");
+      const storedUser = await getUserSession();
+      const token = storedUser?.token || null;
+      if (token) {
+        setUser(storedUser);
+        router.push(getRouteForRole(storedUser.role));
+      } else {
+        console.log("No user session found, redirecting to login.");
+        setUser(null);
+        router.push("/login");
+      }
+      setIsLoading(true);
+    };
 
-  // Login function
+    fetchUserSession();
+  }, []);
+
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      const response = await axiosInstance.post<{
+        data: {
+          token: string;
+          identifier: string;
+          type: string;
+          category: string;
+        };
+      }>("/auth/v1/login", {
+        identifier: email,
+        password: btoa(password), // Encode password in Base64
+      });
 
-    const foundUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
+      const user = handleAuthResponse(response);
+      setUser(user);
+      await setUserSession(user);
 
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser
-      setUser(userWithoutPassword)
-
-      // Store in cookies for middleware access
-      Cookies.set("user", JSON.stringify(userWithoutPassword), { expires: 7 })
-
-      return { success: true }
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      return { success: false, error: errorMessage };
     }
+  };
 
-    return { success: false, error: "Invalid email or password" }
-  }
+  // Register function (if needed)
+  const register = async (
+    identifier: string,
+    password: string,
+    role: string | undefined,
+    type: string | undefined,
+  ) => {
+    try {
+      const response = await axiosInstance.post<{
+        data: {
+          identifier: string;
+          type: string;
+          category: string;
+        };
+      }>("/auth/v1/register", {
+        [`${type}`]: identifier,
+        password: btoa(password), // Encode password in Base64
+        type,
+        category: role,
+      });
 
-  // Register function
-  const register = async (name: string, email: string, password: string, role: "customer" | "restaurant") => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
+      const user = handleAuthResponse(response);
 
-    // Check if email already exists
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      return { success: false, error: "Email already exists" }
+      setUser(user);
+      await setUserSession(user);
+
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
+      return { success: false, error: errorMessage };
     }
-
-    // Create new user
-    const newUser = {
-      email,
-      password,
-      name,
-      role,
-    }
-
-    // Add to users array
-    setUsers((prev) => [...prev, newUser])
-
-    // Log in the new user
-    const { password: _, ...userWithoutPassword } = newUser
-    setUser(userWithoutPassword)
-
-    // Store in cookies for middleware access
-    Cookies.set("user", JSON.stringify(userWithoutPassword), { expires: 7 })
-
-    return { success: true }
-  }
+  };
 
   // Logout function
   const logout = () => {
-    setUser(null)
-    Cookies.remove("user")
-    router.push("/login")
-  }
+    setUser(null);
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-// Custom hook to use auth context
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }
 
-// Helper function to get route based on user role
 export function getRouteForRole(role: UserRole): string {
   switch (role) {
     case "customer":
-      return "/profile"
+      return "/profile";
     case "driver":
-      return "/driver"
+      return "/driver";
     case "restaurant":
-      return "/restaurant"
+      return "/restaurant";
     case "admin":
-      return "/super"
+      return "/super";
     default:
-      return "/login"
+      return "/login";
   }
 }
