@@ -1,152 +1,161 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useRouter } from "next/navigation"
+import Cookies from "js-cookie"
 
-// Mock driver and restaurant data for demonstration
-const MOCK_DRIVERS = [
-  {
-    id: "driver1",
-    email: "driver@example.com",
-    password: "password123",
-    name: "John Driver",
-    avatar: "/placeholder.svg?height=40&width=40",
-    phone: "(555) 123-4567",
-  },
-  {
-    id: "driver2",
-    email: "test@example.com",
-    password: "test123",
-    name: "Test Driver",
-    avatar: "/placeholder.svg?height=40&width=40",
-    phone: "(555) 987-6543",
-  },
-]
+// Define user types
+export type UserRole = "customer" | "driver" | "restaurant" | "admin"
 
-const MOCK_RESTAURANTS = [
-  {
-    id: "restaurant1",
-    email: "qwe@mail.com",
-    password: "qwe123",
-    name: "Gourmet Kitchen",
-    avatar: "/placeholder.svg?height=40&width=40",
-    phone: "(555) 111-2222",
-  },
-  {
-    id: "restaurant2",
-    email: "bistro@example.com",
-    password: "bistro123",
-    name: "Cozy Bistro",
-    avatar: "/placeholder.svg?height=40&width=40",
-    phone: "(555) 333-4444",
-  },
-]
-
-type User = {
-  id: string
+export interface User {
   email: string
   name: string
-  avatar: string
-  phone: string
+  role: UserRole
 }
 
+// Define auth context type
 interface AuthContextType {
-  driver: User | null
-  restaurant: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  error: string | null
-  login: (email: string, password: string, userType: "driver" | "restaurant") => Promise<boolean>
+  user: User | null
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    role: "customer" | "restaurant",
+  ) => Promise<{ success: boolean; error?: string }>
   logout: () => void
+  isLoading: boolean
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined)
+// Create context
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Hardcoded user credentials for frontend development
+const USERS = [
+  {
+    email: "cust.test@mail.com",
+    password: "cust123",
+    name: "Test Customer",
+    role: "customer" as UserRole,
+  },
+  {
+    email: "driver.test@mail.com",
+    password: "driver123",
+    name: "Test Driver",
+    role: "driver" as UserRole,
+  },
+  {
+    email: "rest.test@mail.com",
+    password: "rest123",
+    name: "Test Restaurant",
+    role: "restaurant" as UserRole,
+  },
+  {
+    email: "admin.test@mail.com",
+    password: "admin123",
+    name: "System Admin",
+    role: "admin" as UserRole,
+  },
+]
+
+// Auth provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [driver, setDriver] = useState<User | null>(null)
-  const [restaurant, setRestaurant] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [users, setUsers] = useState(USERS)
+  const router = useRouter()
 
+  // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true)
-      try {
-        const storedDriver = localStorage.getItem("driver")
-        const storedRestaurant = localStorage.getItem("restaurant")
-
-        if (storedDriver) {
-          setDriver(JSON.parse(storedDriver))
-        } else if (storedRestaurant) {
-          setRestaurant(JSON.parse(storedRestaurant))
-        }
-      } catch (e) {
-        console.error("Error checking authentication:", e)
-        localStorage.clear()
-      } finally {
-        setIsLoading(false)
-      }
+    const storedUser = Cookies.get("user")
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
     }
-
-    checkAuth()
+    setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string, userType: "driver" | "restaurant"): Promise<boolean> => {
-    setIsLoading(true)
-    setError(null)
+  // Login function
+  const login = async (email: string, password: string) => {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    const foundUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
 
-      if (userType === "driver") {
-        const foundDriver = MOCK_DRIVERS.find((d) => d.email === email && d.password === password)
-        if (!foundDriver) throw new Error("Invalid email or password")
-        const { password: _, ...driverData } = foundDriver
-        setDriver(driverData)
-        localStorage.setItem("driver", JSON.stringify(driverData))
-      } else if (userType === "restaurant") {
-        const foundRestaurant = MOCK_RESTAURANTS.find((r) => r.email === email && r.password === password)
-        if (!foundRestaurant) throw new Error("Invalid email or password")
-        const { password: _, ...restaurantData } = foundRestaurant
-        setRestaurant(restaurantData)
-        localStorage.setItem("restaurant", JSON.stringify(restaurantData))
-      }
+    if (foundUser) {
+      const { password: _, ...userWithoutPassword } = foundUser
+      setUser(userWithoutPassword)
 
-      return true
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
-      return false
-    } finally {
-      setIsLoading(false)
+      // Store in cookies for middleware access
+      Cookies.set("user", JSON.stringify(userWithoutPassword), { expires: 7 })
+
+      return { success: true }
     }
+
+    return { success: false, error: "Invalid email or password" }
   }
 
+  // Register function
+  const register = async (name: string, email: string, password: string, role: "customer" | "restaurant") => {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    // Check if email already exists
+    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+      return { success: false, error: "Email already exists" }
+    }
+
+    // Create new user
+    const newUser = {
+      email,
+      password,
+      name,
+      role,
+    }
+
+    // Add to users array
+    setUsers((prev) => [...prev, newUser])
+
+    // Log in the new user
+    const { password: _, ...userWithoutPassword } = newUser
+    setUser(userWithoutPassword)
+
+    // Store in cookies for middleware access
+    Cookies.set("user", JSON.stringify(userWithoutPassword), { expires: 7 })
+
+    return { success: true }
+  }
+
+  // Logout function
   const logout = () => {
-    setDriver(null)
-    setRestaurant(null)
-    localStorage.clear()
+    setUser(null)
+    Cookies.remove("user")
+    router.push("/login")
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        driver,
-        restaurant,
-        isAuthenticated: !!driver || !!restaurant,
-        isLoading,
-        error,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
 }
 
+// Custom hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
+}
+
+// Helper function to get route based on user role
+export function getRouteForRole(role: UserRole): string {
+  switch (role) {
+    case "customer":
+      return "/profile"
+    case "driver":
+      return "/driver"
+    case "restaurant":
+      return "/restaurant"
+    case "admin":
+      return "/super"
+    default:
+      return "/login"
+  }
 }
