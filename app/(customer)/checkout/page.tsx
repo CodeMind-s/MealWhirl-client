@@ -1,60 +1,85 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { ChevronLeft, CreditCard, MapPin, ShieldCheck } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { ChevronLeft, CreditCard, MapPin, ShieldCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
-import { useCart } from "@/lib/cart-context"
-import { formatCurrency } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/lib/cart-context";
+import { formatCurrency } from "@/lib/utils";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { convertToSubcurrency } from "@/lib/utils";
+import CheckoutPageComponent from "@/components/CheckoutPageComponent";
+
+if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
+  throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
+}
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
 export default function CheckoutPage() {
-  const { toast } = useToast()
-  const { cart, cartTotal, cartSubtotal, deliveryFee, tax, clearCart } = useCart()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState("card")
+  const { toast } = useToast();
+  const { cart, cartTotal, cartSubtotal, deliveryFee, tax, clearCart } =
+    useCart();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  // const amount = 49.99;
+  const [customerName, setCustomerName] = useState("induwara");
+  const [description, setDescription] = useState("Payment for services");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     // Simulate order processing
     setTimeout(() => {
-      clearCart()
+      clearCart();
       toast({
         title: "Order placed successfully!",
         description: "You can track your order in your profile.",
-      })
-      window.location.href = "/profile/orders"
-    }, 2000)
-  }
+      });
+      window.location.href = "/profile/orders";
+    }, 2000);
+  };
 
   if (cart.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <p className="text-gray-500 mb-8">You need to add items to your cart before checkout.</p>
+          <p className="text-gray-500 mb-8">
+            You need to add items to your cart before checkout.
+          </p>
           <Link href="/restaurants">
             <Button>Browse Restaurants</Button>
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <Link href="/cart" className="inline-flex items-center text-primary hover:underline mb-6">
+      <Link
+        href="/cart"
+        className="inline-flex items-center text-primary hover:underline mb-6"
+      >
         <ChevronLeft className="h-4 w-4 mr-1" />
         Back to Cart
       </Link>
@@ -67,7 +92,10 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-blue-100 dark:border-blue-900">
             <CardHeader className="bg-blue-50 dark:bg-blue-950">
@@ -106,7 +134,9 @@ export default function CheckoutPage() {
                 <Input id="phone" type="tel" required className="h-11" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                <Label htmlFor="instructions">
+                  Delivery Instructions (Optional)
+                </Label>
                 <Textarea
                   id="instructions"
                   placeholder="E.g., Ring the doorbell, leave at the door, etc."
@@ -124,19 +154,23 @@ export default function CheckoutPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+              <RadioGroup
+                value={paymentMethod}
+                onValueChange={setPaymentMethod}
+                className="space-y-4"
+              >
                 <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
                   <RadioGroupItem value="card" id="card" />
                   <Label htmlFor="card" className="flex-1 cursor-pointer">
                     Credit/Debit Card
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+                {/* <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
                   <RadioGroupItem value="paypal" id="paypal" />
                   <Label htmlFor="paypal" className="flex-1 cursor-pointer">
                     PayPal
                   </Label>
-                </div>
+                </div> */}
                 <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
                   <RadioGroupItem value="cash" id="cash" />
                   <Label htmlFor="cash" className="flex-1 cursor-pointer">
@@ -147,7 +181,7 @@ export default function CheckoutPage() {
 
               {paymentMethod === "card" && (
                 <div className="mt-6 space-y-4 p-4 border border-blue-100 dark:border-blue-900 rounded-md bg-blue-50/50 dark:bg-blue-950/50">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="cardNumber">Card Number</Label>
                     <Input id="cardNumber" placeholder="1234 5678 9012 3456" required className="h-11" />
                   </div>
@@ -164,8 +198,26 @@ export default function CheckoutPage() {
                   <div className="space-y-2">
                     <Label htmlFor="nameOnCard">Name on Card</Label>
                     <Input id="nameOnCard" required className="h-11" />
-                  </div>
+                  </div> */}
+                  <Elements
+                  stripe={stripePromise}
+                  options={{
+                    mode: "payment",
+                    amount: convertToSubcurrency(cartTotal),
+                    currency: "usd",
+                    appearance: {
+                      theme: "night", 
+                    },
+                  }}
+                >
+                  <CheckoutPageComponent
+                    amount={cartTotal}
+                    customerName={customerName}
+                    description={description}
+                  />
+                </Elements>
                 </div>
+                
               )}
             </CardContent>
           </Card>
@@ -183,7 +235,9 @@ export default function CheckoutPage() {
                     <span className="flex-1">
                       {item.quantity} × {item.name}
                     </span>
-                    <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(item.price * item.quantity)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -205,11 +259,18 @@ export default function CheckoutPage() {
               <Separator />
               <div className="flex justify-between font-medium text-lg">
                 <span>Total</span>
-                <span className="text-primary">{formatCurrency(cartTotal)}</span>
+                <span className="text-primary">
+                  {formatCurrency(cartTotal)}
+                </span>
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full rounded-full" size="lg" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full rounded-full"
+                size="lg"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Processing..." : "Place Order"}
               </Button>
             </CardFooter>
@@ -227,5 +288,5 @@ export default function CheckoutPage() {
         </div>
       </form>
     </div>
-  )
+  );
 }
