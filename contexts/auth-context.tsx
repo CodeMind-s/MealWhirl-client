@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.log("No user session found, redirecting to login.");
         setUser(null);
-        router.push("/login");
+        // router.push("/login");
       }
       setIsLoading(true);
     };
