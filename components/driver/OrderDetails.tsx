@@ -98,7 +98,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const response = await getOrderById(orderId);
+        const response: any = await getOrderById(orderId);
         if (response.data) {
           setOrderDetails(response.data);
         }
