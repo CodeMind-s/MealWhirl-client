@@ -45,6 +45,7 @@ import {
 } from "../ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "../ui/toast";
+import { sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
 
 interface DeliveryAddress {
   latitude: number;
@@ -143,6 +144,41 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           title: "Success",
           description: "Order status updated successfully.",
         });
+
+        // Send SMS notification to the customer
+        const smsMessages = {
+          PLACED: "Your order has been placed successfully!",
+          ACCEPTED: "Your order has been accepted by the restaurant.",
+          PREPARING: "Your order is being prepared.",
+          READY_FOR_PICKUP: "Your order is ready for pickup.",
+          PICKED_UP: "Your order has been picked up by the delivery person.",
+          ON_THE_WAY: "Your order is on the way!",
+          DELIVERED: "Your order has been delivered. Enjoy your meal!",
+          CANCELLED:
+            "Your order has been cancelled. If you have any questions, please contact support.",
+        };
+
+        const smsData = {
+          to: "94774338424", // Assuming phone number is part of deliveryAddress
+          message: smsMessages[status],
+        };
+        try {
+          await sendSMSNotification(smsData);
+          toast({
+            title: "Notification Sent",
+            description: "Customer has been notified via SMS.",
+          });
+        } catch (smsError) {
+          console.error("Error sending SMS notification:", smsError);
+          toast({
+            variant: "destructive",
+            title: "Notification Error",
+            description: "Failed to send SMS notification to the customer.",
+          });
+        }
+
+        // Reload the page after updating the status
+        window.location.reload();
       }
     } catch (error: any) {
       if (error.response) {
@@ -309,14 +345,13 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           <div className="grid gap-4">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 text-center">
               <div
-                className={`p-4 rounded-lg border ${
-                  orderDetails.orderStatus === "READY_FOR_PICKUP" ||
-                  orderDetails.orderStatus === "PREPARING" ||
-                  orderDetails.orderStatus === "ACCEPTED" ||
-                  orderDetails.orderStatus === "PLACED"
+                className={`p-4 rounded-lg border ${orderDetails.orderStatus === "READY_FOR_PICKUP" ||
+                    orderDetails.orderStatus === "PREPARING" ||
+                    orderDetails.orderStatus === "ACCEPTED" ||
+                    orderDetails.orderStatus === "PLACED"
                     ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20"
                     : ""
-                }`}
+                  }`}
               >
                 <Package className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
                 <div className="font-medium">Ready for Pickup</div>
@@ -324,11 +359,10 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div
-                    className={`p-4 rounded-lg border ${
-                      orderDetails.orderStatus === "PICKED_UP"
+                    className={`p-4 rounded-lg border ${orderDetails.orderStatus === "PICKED_UP"
                         ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20"
                         : ""
-                    }`}
+                      }`}
                   >
                     <HandPlatter className="h-6 w-6 mx-auto mb-2 text-cyan-500" />
                     <div className="font-medium">Picked Up</div>
@@ -351,11 +385,10 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div
-                    className={`p-4 rounded-lg border ${
-                      orderDetails.orderStatus === "ON_THE_WAY"
+                    className={`p-4 rounded-lg border ${orderDetails.orderStatus === "ON_THE_WAY"
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
                         : ""
-                    }`}
+                      }`}
                   >
                     <Truck className="h-6 w-6 mx-auto mb-2 text-blue-500" />
                     <div className="font-medium">On The Way</div>
@@ -378,11 +411,10 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div
-                    className={`p-4 rounded-lg border ${
-                      orderDetails.orderStatus === "DELIVERED"
+                    className={`p-4 rounded-lg border ${orderDetails.orderStatus === "DELIVERED"
                         ? "border-green-500 bg-green-50 dark:bg-green-950/20"
                         : ""
-                    }`}
+                      }`}
                   >
                     <CheckCircle2 className="h-6 w-6 mx-auto mb-2 text-green-500" />
                     <div className="font-medium">Delivered</div>
