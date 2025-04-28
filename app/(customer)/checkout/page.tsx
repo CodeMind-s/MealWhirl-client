@@ -26,6 +26,9 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { convertToSubcurrency } from "@/lib/utils";
 import CheckoutPageComponent from "@/components/CheckoutPageComponent";
+import { createNewOrder } from "@/lib/api/orderApi";
+import { ToastAction } from "@/components/ui/toast";
+import { useRouter } from "next/navigation";
 
 if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
   throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
@@ -33,15 +36,116 @@ if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
+interface ItemsData {
+  itemName: string;
+  quentity: string;
+  total: string;
+  imageUrl?: string | any;
+}
+
+interface AddressesData {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+type PaymentMethod = "CASH" | "CARD";
+
+interface OrderStatusDto {
+  userId: string;
+  restaurantId: string;
+  items: ItemsData[];
+  deliveryAddress: AddressesData;
+  paymentId: string;
+  paymentMethod: PaymentMethod;
+  totalAmount: number;
+  deliveryFee: number;
+  distance: number;
+  duration: number;
+  fare: number;
+  specialInstructions: string;
+}
+
 export default function CheckoutPage() {
   const { toast } = useToast();
   const { cart, cartTotal, cartSubtotal, deliveryFee, tax, clearCart } =
     useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [paymentMethod, setPaymentMethod] = useState<any>("CARD");
   // const amount = 49.99;
   const [customerName, setCustomerName] = useState("induwara");
   const [description, setDescription] = useState("Payment for services");
+  const [userId, setUserId] = useState<string>("67e43a6dd6708a25582d3aaa1");
+  const router = useRouter();
+
+  const handlePlaceOrder = async (e: any) => {
+    e.preventDefault();
+    try {
+      const data: any = {
+        userId: userId,
+        restaurantId: "restaurantId",
+        items: cart.map((item) => ({
+          itemName: item.name,
+          quentity: item.quantity.toString(),
+          total: item.price.toString(),
+          imageUrl:
+            "https://th.bing.com/th/id/OIP.5XZGu7I9rqQc67dpzviiugHaE7?rs=1&pid=ImgDetMain",
+        })),
+        deliveryAddress: {
+          address: "address",
+          latitude: 0,
+          longitude: 0,
+        },
+        paymentId: "paymentId",
+        paymentMethod: paymentMethod,
+        totalAmount: cartTotal,
+        deliveryFee: deliveryFee,
+        distance: 10,
+        duration: 30,
+        fare: 5,
+        specialInstructions: description,
+      };
+      const response = await createNewOrder(data);
+
+      if (response) {
+        toast({
+          title: "Success",
+          description: "Order created successfully.",
+        });
+        clearCart();
+        router.push("/profile/orders");
+        router.refresh();
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data && data.message) {
+          toast({
+            title: "Error",
+            description: `Order creation failed: ${data.message}`,
+            variant: "destructive",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "An unexpected error occurred. Please try again.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description:
+            "An unexpected error occurred. Please check your network and try again.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +197,7 @@ export default function CheckoutPage() {
       </div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handlePlaceOrder}
         className="grid grid-cols-1 lg:grid-cols-3 gap-8"
       >
         <div className="lg:col-span-2 space-y-6">
@@ -160,8 +264,8 @@ export default function CheckoutPage() {
                 className="space-y-4"
               >
                 <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
-                  <RadioGroupItem value="card" id="card" />
-                  <Label htmlFor="card" className="flex-1 cursor-pointer">
+                  <RadioGroupItem value="CARD" id="CARD" />
+                  <Label htmlFor="CARD" className="flex-1 cursor-pointer">
                     Credit/Debit Card
                   </Label>
                 </div>
@@ -172,14 +276,14 @@ export default function CheckoutPage() {
                   </Label>
                 </div> */}
                 <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
-                  <RadioGroupItem value="cash" id="cash" />
-                  <Label htmlFor="cash" className="flex-1 cursor-pointer">
+                  <RadioGroupItem value="CASH" id="CASH" />
+                  <Label htmlFor="CASH" className="flex-1 cursor-pointer">
                     Cash on Delivery
                   </Label>
                 </div>
               </RadioGroup>
 
-              {paymentMethod === "card" && (
+              {paymentMethod === "CARD" && (
                 <div className="mt-6 space-y-4 p-4 border border-blue-100 dark:border-blue-900 rounded-md bg-blue-50/50 dark:bg-blue-950/50">
                   {/* <div className="space-y-2">
                     <Label htmlFor="cardNumber">Card Number</Label>
@@ -200,24 +304,23 @@ export default function CheckoutPage() {
                     <Input id="nameOnCard" required className="h-11" />
                   </div> */}
                   <Elements
-                  stripe={stripePromise}
-                  options={{
-                    mode: "payment",
-                    amount: convertToSubcurrency(cartTotal),
-                    currency: "usd",
-                    appearance: {
-                      theme: "night", 
-                    },
-                  }}
-                >
-                  <CheckoutPageComponent
-                    amount={cartTotal}
-                    customerName={customerName}
-                    description={description}
-                  />
-                </Elements>
+                    stripe={stripePromise}
+                    options={{
+                      mode: "payment",
+                      amount: convertToSubcurrency(cartTotal),
+                      currency: "usd",
+                      appearance: {
+                        theme: "night",
+                      },
+                    }}
+                  >
+                    <CheckoutPageComponent
+                      amount={cartTotal}
+                      customerName={customerName}
+                      description={description}
+                    />
+                  </Elements>
                 </div>
-                
               )}
             </CardContent>
           </Card>

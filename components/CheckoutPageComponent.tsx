@@ -18,7 +18,7 @@ const CheckoutPageComponent = ({ amount, customerName, description }: CheckoutPa
   const stripe = useStripe();
   const elements = useElements();
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [clientSecret, setClientSecret] = useState("");
+  const [clientSecret, setClientSecret] = useState<any>("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
