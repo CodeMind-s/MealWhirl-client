@@ -11,3 +11,7 @@ export function formatCurrency(amount: number): string {
     currency: "USD",
   }).format(amount)
 }
+
+export function convertToSubcurrency(amount: number, factor = 100) {
+  return Math.round(amount * factor);
+}
