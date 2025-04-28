@@ -139,11 +139,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="drivers" id="driver" />
-                    <Label htmlFor="restaurant">Driver</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admins" id="admin" />
-                    <Label htmlFor="admin">Admin</Label>
+                    <Label htmlFor="driver">Driver</Label>
                   </div>
                 </RadioGroup>
               </div>

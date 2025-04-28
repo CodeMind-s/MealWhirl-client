@@ -10,7 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { User, UserRole } from "@/types/User";
 import axiosInstance from "@/lib/middleware/axioinstance";
-import { getUserSession, setUserSession } from "@/lib/middleware/auth";
+import { getUserSession, removeUserSession, setUserSession } from "@/lib/middleware/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Logout function
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    removeUserSession();
     router.push("/login");
   };
 
