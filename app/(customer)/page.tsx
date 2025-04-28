@@ -7,39 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import RestaurantCard from "@/components/restaurant-card"
 import { restaurants } from "@/lib/data"
-import { useEffect, useState } from "react"
-import { getAllOrders } from "@/lib/api/orderApi"
 
 export default function Home() {
-  const [orders, setOrders] = useState([]);
-
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        const response = await getAllOrders();
-        if (response.data) {
-          setOrders(response.data);
-        }
-      } catch (err: any) {
-        if (err.response) {
-          const { data } = err.response;
-
-          if (data && data.message) {
-            console.log(`Order Details Fetching Faild: ${data.message}`);
-          } else {
-            console.log("An unexpected error occurred. Please try again.");
-          }
-        } else {
-          console.log(
-            "An unexpected error occurred. Please check your network and try again."
-          );
-        }
-      }
-    };
-
-    fetchOrderDetails();
-  }, []);
-
 
   return (
     <div>
@@ -95,7 +64,7 @@ export default function Home() {
               <div className="relative h-[350px] w-[350px] sm:h-[400px] sm:w-[400px] lg:h-[480px] lg:w-[480px]">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-full blur-3xl -z-10 transform scale-95"></div>
                 <Image
-                  src="/placeholder.svg?height=500&width=500"
+                  src={require("@/assets/burger.png")}
                   alt="Food delivery illustration"
                   fill
                   className="object-contain"
