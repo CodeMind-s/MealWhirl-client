@@ -133,9 +133,20 @@ export function MenuItemsPage() {
       );
       setMenuItems(filteredItems);
     } else {
-      setMenuItems(menuItems);
+      if (user) {
+        const menuCategories = mapToMenuCategories(
+          menuRawData,
+          user.identifier
+        );
+        const categoryIdMap = Object.fromEntries(
+          menuCategories.map((category) => [category.name, category.id])
+        );
+        setMenuItems(
+          mapToMenuItems(menuRawData, user.identifier, categoryIdMap)
+        );
+      }
     }
-  }, [searchQuery, menuRawData]);
+  }, [searchQuery, menuRawData, user]);
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (selectedCategory === "all") return true;
