@@ -106,7 +106,6 @@ export function MenuItemsPage() {
     const itemToUpdate = menuRawData.find(
       (rawItem) => rawItem.name === item.name
     );
-    console.log("itemToUpdate", itemToUpdate);
     await updateMenuItem({
       menu: {
         name: itemToUpdate.name,
@@ -134,7 +133,7 @@ export function MenuItemsPage() {
       );
       setMenuItems(filteredItems);
     } else {
-      setMenuItems(menuRawData);
+      setMenuItems(menuItems);
     }
   }, [searchQuery, menuRawData]);
 
@@ -142,6 +141,9 @@ export function MenuItemsPage() {
     if (selectedCategory === "all") return true;
     return item.category === selectedCategory;
   });
+
+
+  console.log("Filtered Menu Items:", filteredMenuItems);
 
   return (
     <div className="flex flex-col gap-6">
