@@ -15,7 +15,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
-import { updateOrderStatus } from "@/lib/api/orderApi"; // Import the update order status function
+import { updateOrderStatus, assignDeliveryPerson } from "@/lib/api/orderApi"; // Import the update order status function
 
 interface UpdateOrderStatusModalProps {
   open: boolean
@@ -33,7 +33,7 @@ type OrderStatus =
   | "PLACED"
   | "ACCEPTED"
   | "PREPARING"
-  | "READY_FOR_PICKUP"
+  | "REDY_FOR_PICKUP"
   | "CANCELLED";
 
 export function UpdateOrderStatusModal({
@@ -55,6 +55,18 @@ export function UpdateOrderStatusModal({
 
       if (response.status === 200) {
         console.log("Order status updated successfully.");
+
+        if (status === "REDY_FOR_PICKUP") {
+          const assignData = {
+            deliveryPersonId: "67fbb71ad2df7230c45110we", // Replace with actual delivery person ID logic
+          };
+          try {
+            await assignDeliveryPerson(orderId, assignData);
+            console.log("Delivery person assigned successfully.");
+          } catch (assignError) {
+            console.error("Error assigning delivery person:", assignError);
+          }
+        }
 
         // Send SMS notification to the customer
         const smsMessages = {
@@ -78,6 +90,7 @@ export function UpdateOrderStatusModal({
 
         // Call the onStatusUpdate callback
         onStatusUpdate(orderId, status);
+        window.location.reload();
       }
     } catch (error: any) {
       if (error.response) {
