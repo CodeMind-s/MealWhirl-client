@@ -86,7 +86,7 @@ export const getOrdersByUserId = async (userId: string) => {
 export const getOrdersByRestaurantId = async (restaurantId: string) => {
   try {
     const response = await axiosInstance.get(
-      `/api/v1/orders/restaurant/${restaurantId}`
+      `/orders/restaurant/${restaurantId}`
     );
     return response;
   } catch (error) {
@@ -97,7 +97,7 @@ export const getOrdersByRestaurantId = async (restaurantId: string) => {
 
 export const getOrderById = async (orderId: string) => {
   try {
-    const response = await axiosInstance.get(`/api/v1/orders/${orderId}`);
+    const response = await axiosInstance.get(`/orders/${orderId}`);
     return response;
   } catch (error) {
     console.log("Error while fetchin restaurant orders:", error);
@@ -110,10 +110,7 @@ export const updateOrderStatus = async (
   data: OrderStatusDto
 ) => {
   try {
-    const response = await axiosInstance.patch(
-      `/api/v1/orders/${orderId}`,
-      data
-    );
+    const response = await axiosInstance.patch(`/orders/${orderId}`, data);
     return response;
   } catch (error) {
     console.log("Error while updating order status:", error);
@@ -126,10 +123,7 @@ export const assignDeliveryPerson = async (
   data: AssignDeliveryPersonDto
 ) => {
   try {
-    const response = await axiosInstance.patch(
-      `/api/v1/orders/${orderId}`,
-      data
-    );
+    const response = await axiosInstance.patch(`/orders/${orderId}`, data);
     return response;
   } catch (error) {
     console.log("Error while updating order status:", error);
@@ -139,7 +133,7 @@ export const assignDeliveryPerson = async (
 
 export const deleteOrder = async (orderId: string) => {
   try {
-    const response = await axiosInstance.delete(`/api/v1/orders/${orderId}`);
+    const response = await axiosInstance.delete(`/orders/${orderId}`);
     return response;
   } catch (error) {
     console.log("Error while deleting order:", error);
