@@ -85,3 +85,18 @@ export const deleteUser = async (userId: string) => {
     throw error.response?.data || error.message;
   }
 };
+
+const getUserPayamentMethod = async (userId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `/users/v1/restaurant/payment/${userId}`
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error fetching payment method:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data || error.message;
+  }
+}

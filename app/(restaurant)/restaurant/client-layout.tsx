@@ -60,7 +60,7 @@ export default function ClientLayout({
   };
 
   const handleSettingsClick = () => {
-    console.log("Settings clicked");
+    router.push("/restaurant/settings");
   };
 
   return (
