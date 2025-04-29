@@ -78,7 +78,7 @@ export function OrdersPage() {
   const statusColors = {
     PLACED: "bg-yellow-500",
     PREPARING: "bg-orange-500",
-    READY_FOR_PICKUP: "bg-indigo-500",
+    REDY_FOR_PICKUP: "bg-indigo-500",
     CANCELLED: "bg-red-500",
   };
 
@@ -229,7 +229,7 @@ function OrderStatus({ status }: { status: string }) {
         status === "PLACED" && "border-emerald-500 text-emerald-500",
         status === "COMPLETED" && "border-emerald-500 text-emerald-500",
         status === "PREPARING" && "border-amber-500 text-amber-500",
-        status === "READY_FOR_PICKUP" && "border-blue-500 text-blue-500",
+        status === "REDY_FOR_PICKUP" && "border-blue-500 text-blue-500",
         status === "CANCELLED" && "border-rose-500 text-rose-500",
       )}
     >
