@@ -102,10 +102,10 @@ export default function ClientLayout({
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-sm font-medium">{extractInitials(user?.basic?.name)}</span>
+                              <span className="text-sm font-medium">{extractInitials(user?.basic?.name || user?.identifier)}</span>
                             </div>
                             <div className="hidden md:block text-sm font-medium">
-                              {user?.basic?.name}
+                              {user?.basic?.name || user?.identifier}
                             </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           </Button>

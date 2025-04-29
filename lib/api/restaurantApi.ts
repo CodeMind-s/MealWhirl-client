@@ -6,7 +6,7 @@ export const createUpdateResaurant = async (userData: Record<string, any>, statu
   const { identifier, ...rest } = userData;
   const payload = {
     restaurant: rest,
-    ...(USER_ACCOUNT_STATUS.CREATING === status ? { identifier: identifier || userData.email } : {}),
+    ...(USER_ACCOUNT_STATUS.CREATING === status ? { identifier: identifier } : {}),
   };
   try {
     const method = status === USER_ACCOUNT_STATUS.CREATING ? axiosInstance.post : axiosInstance.put;

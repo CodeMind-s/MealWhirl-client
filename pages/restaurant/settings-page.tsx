@@ -16,9 +16,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
-import { addPayamentMethod, createUpdateResaurant } from "@/lib/api/restaurantApi";
+import {
+  addPayamentMethod,
+  createUpdateResaurant,
+} from "@/lib/api/restaurantApi";
 import { useRouter } from "next/navigation";
-import { USER_ACCOUNT_STATUS, USER_CATEGORIES } from "@/constants/userConstants";
+import {
+  USER_ACCOUNT_STATUS,
+  USER_CATEGORIES,
+} from "@/constants/userConstants";
 import { getUserByCategoryAndId } from "@/lib/api/userApi";
 
 export const validatePaymentMethods = (paymentMethods: any[]) => {
@@ -106,7 +112,11 @@ export function SettingsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userData = await getUserByCategoryAndId(USER_CATEGORIES.RESTAURANT, user?.identifier, null);
+        const userData = await getUserByCategoryAndId(
+          USER_CATEGORIES.RESTAURANT,
+          user?.identifier,
+          null
+        );
         if (userData) {
           setRestaurantData({
             name: userData.name || "",
@@ -136,8 +146,11 @@ export function SettingsPage() {
         console.error("Error fetching user data:", error);
       }
     };
-  
-    if (user?.accountStatus !== USER_ACCOUNT_STATUS.CREATING) {
+
+    if (
+      user?.accountStatus !== USER_ACCOUNT_STATUS.CREATING &&
+      user?.identifier
+    ) {
       fetchData();
     }
   }, [user]);
@@ -161,11 +174,16 @@ export function SettingsPage() {
 
   const saveResaurantData = async () => {
     try {
-      await createUpdateResaurant({
-        ...restaurantData,
-        paymentMethods: savedPaymentMethods,
-        identifier: user?.identifier,
-      });
+      await createUpdateResaurant(
+        {
+          ...restaurantData,
+          paymentMethods: savedPaymentMethods.filter(
+            (method) => typeof method === "string"
+          ),
+          identifier: user?.identifier,
+        },
+        user?.accountStatus
+      );
       setUser((prev: User) => ({
         ...prev,
         accountStatus: USER_ACCOUNT_STATUS.ACTIVE,
