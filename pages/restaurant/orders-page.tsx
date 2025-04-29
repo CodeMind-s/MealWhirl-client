@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Calendar, ChevronDown, Filter, MoreHorizontal, Search } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -20,90 +20,38 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UpdateOrderStatusModal } from "../../components/restaurant/update-order-status-modal"
 import { toast } from "@/components/ui/use-toast"
 import { OrderDetailsModal } from "../../components/restaurant/order-details-modal"
-
-const initialOrders = [
-  {
-    id: "ORD-001",
-    customer: "Sarah Johnson",
-    items: [
-      { name: "Truffle Pasta", quantity: 2, price: "$24.99" },
-      { name: "Tiramisu", quantity: 2, price: "$12.99" },
-    ],
-    total: "$86.24",
-    status: "completed",
-    date: "Today, 2:30 PM",
-    payment: "Credit Card",
-  },
-  {
-    id: "ORD-002",
-    customer: "Michael Chen",
-    items: [
-      { name: "Beef Wellington", quantity: 1, price: "$38.50" },
-      { name: "Signature Cocktail", quantity: 1, price: "$14.50" },
-    ],
-    total: "$53.00",
-    status: "preparing",
-    date: "Today, 2:15 PM",
-    payment: "Cash",
-  },
-  {
-    id: "ORD-003",
-    customer: "Emily Rodriguez",
-    items: [
-      { name: "Lobster Bisque", quantity: 2, price: "$18.75" },
-      { name: "Beef Wellington", quantity: 2, price: "$38.50" },
-      { name: "Tiramisu", quantity: 2, price: "$12.99" },
-    ],
-    total: "$124.00",
-    status: "completed",
-    date: "Today, 1:45 PM",
-    payment: "Credit Card",
-  },
-  {
-    id: "ORD-004",
-    customer: "David Kim",
-    items: [
-      { name: "Truffle Pasta", quantity: 1, price: "$24.99" },
-      { name: "Lobster Bisque", quantity: 1, price: "$18.75" },
-      { name: "Signature Cocktail", quantity: 1, price: "$14.50" },
-    ],
-    total: "$58.24",
-    status: "ready",
-    date: "Today, 1:30 PM",
-    payment: "PayPal",
-  },
-  {
-    id: "ORD-005",
-    customer: "Jessica Patel",
-    items: [
-      { name: "Signature Cocktail", quantity: 1, price: "$14.50" },
-      { name: "Tiramisu", quantity: 1, price: "$12.99" },
-    ],
-    total: "$27.49",
-    status: "cancelled",
-    date: "Today, 1:00 PM",
-    payment: "Credit Card",
-  },
-  {
-    id: "ORD-006",
-    customer: "Robert Wilson",
-    items: [
-      { name: "Beef Wellington", quantity: 2, price: "$38.50" },
-      { name: "Lobster Bisque", quantity: 1, price: "$18.75" },
-      { name: "Signature Cocktail", quantity: 2, price: "$14.50" },
-    ],
-    total: "$124.75",
-    status: "completed",
-    date: "Today, 12:30 PM",
-    payment: "Cash",
-  },
-]
+import { getOrdersByRestaurantId } from "@/lib/api/orderApi"
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState(initialOrders)
+  interface Order {
+    id: string
+    customer: string
+    items: { itemName: string; total: string; quentity: string }[]
+    total: number
+    payment: string
+    orderStatus: string
+    createdAt: string
+  }
+
+  const [orders, setOrders] = useState<Order[]>([])
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const restaurantId = "67e43a6dd6708a25582d3add1" // Replace with actual restaurant ID
+        const response = await getOrdersByRestaurantId(restaurantId)
+        setOrders(response.data as Order[])
+        console.log(`re => `, response.data);
+      } catch (error) {
+        console.error("Error fetching orders:", error)
+      }
+    }
+
+    fetchOrders()
+  }, [])
 
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order)
@@ -126,6 +74,13 @@ export function OrdersPage() {
       description: `Order ${orderId} has been updated to ${newStatus}`,
     })
   }
+
+  const statusColors = {
+    PLACED: "bg-yellow-500",
+    PREPARING: "bg-orange-500",
+    READY_FOR_PICKUP: "bg-indigo-500",
+    CANCELLED: "bg-red-500",
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -191,7 +146,6 @@ export function OrdersPage() {
                   <TableHead>Order ID</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead className="hidden md:table-cell">Items</TableHead>
-                  <TableHead>Total</TableHead>
                   <TableHead className="hidden md:table-cell">Payment</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden md:table-cell">Date</TableHead>
@@ -199,17 +153,17 @@ export function OrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
+                {orders.map((order: any) => (
+                  <TableRow key={order._id}>
+                    <TableCell className="font-medium">{order._id}</TableCell>
+                    <TableCell>{order.customer ? order.customer : "Indusri"}</TableCell>
                     <TableCell className="hidden md:table-cell">{order.items.length}</TableCell>
-                    <TableCell>{order.total}</TableCell>
-                    <TableCell className="hidden md:table-cell">{order.payment}</TableCell>
+                    {/* <TableCell>{order.total}</TableCell> */}
+                    <TableCell className="hidden md:table-cell">${order.totalAmount}</TableCell>
                     <TableCell>
-                      <OrderStatus status={order.status} />
+                      <OrderStatus status={order.orderStatus} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{order.date}</TableCell>
+                    <TableCell className="hidden md:table-cell">{order.createdAt}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -221,9 +175,9 @@ export function OrdersPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => handleViewDetails(order)}>View details</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(order.id)}>
+                          {/* <DropdownMenuItem onClick={() => handleUpdateStatus(order.id)}>
                             Update status
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>Print receipt</DropdownMenuItem>
                           <DropdownMenuItem className="text-rose-500">Cancel order</DropdownMenuItem>
@@ -243,20 +197,21 @@ export function OrdersPage() {
           <UpdateOrderStatusModal
             open={isUpdateModalOpen}
             onOpenChange={setIsUpdateModalOpen}
-            orderId={selectedOrder.id}
-            currentStatus={selectedOrder.status}
+            orderId={selectedOrder._id}
+            currentStatus={selectedOrder.orderStatus}
             onStatusUpdate={handleStatusUpdate}
           />
           <OrderDetailsModal
             open={isDetailsModalOpen}
             onOpenChange={setIsDetailsModalOpen}
-            id={selectedOrder.id}
-            customer={selectedOrder.customer}
+            id={selectedOrder._id}
+            customer={selectedOrder.customer ? selectedOrder.customer : "Indusri"}
             items={selectedOrder.items}
-            total={selectedOrder.total}
-            status={selectedOrder.status}
-            date={selectedOrder.date}
-            payment={selectedOrder.payment}
+            total={selectedOrder.total ? selectedOrder.total : "0"}
+            status={selectedOrder.orderStatus}
+            date={selectedOrder.createdAt}
+            payment={selectedOrder.totalAmount}
+            deliveryFee={selectedOrder.deliveryFee ? selectedOrder.deliveryFee : 0}
             onStatusUpdate={handleStatusUpdate}
           />
         </>
@@ -271,10 +226,11 @@ function OrderStatus({ status }: { status: string }) {
       variant="outline"
       className={cn(
         "capitalize",
-        status === "completed" && "border-emerald-500 text-emerald-500",
-        status === "preparing" && "border-amber-500 text-amber-500",
-        status === "ready" && "border-blue-500 text-blue-500",
-        status === "cancelled" && "border-rose-500 text-rose-500",
+        status === "PLACED" && "border-emerald-500 text-emerald-500",
+        status === "COMPLETED" && "border-emerald-500 text-emerald-500",
+        status === "PREPARING" && "border-amber-500 text-amber-500",
+        status === "READY_FOR_PICKUP" && "border-blue-500 text-blue-500",
+        status === "CANCELLED" && "border-rose-500 text-rose-500",
       )}
     >
       {status}
