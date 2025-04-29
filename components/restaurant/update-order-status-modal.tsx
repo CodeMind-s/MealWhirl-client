@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
+import { updateOrderStatus } from "@/lib/api/orderApi"; // Import the update order status function
 
 interface UpdateOrderStatusModalProps {
   open: boolean
@@ -23,6 +25,17 @@ interface UpdateOrderStatusModalProps {
   onStatusUpdate: (orderId: string, newStatus: string) => void
 }
 
+interface OrderStatusDto {
+  orderStatus: OrderStatus;
+}
+
+type OrderStatus =
+  | "PLACED"
+  | "ACCEPTED"
+  | "PREPARING"
+  | "READY_FOR_PICKUP"
+  | "CANCELLED";
+
 export function UpdateOrderStatusModal({
   open,
   onOpenChange,
@@ -30,19 +43,59 @@ export function UpdateOrderStatusModal({
   currentStatus,
   onStatusUpdate,
 }: UpdateOrderStatusModalProps) {
-  const [status, setStatus] = useState(currentStatus)
+  const [status, setStatus] = useState<OrderStatus>(currentStatus as OrderStatus)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
+  const handleStatusChange = async (status: OrderStatus) => {
+    try {
+      const data: OrderStatusDto = {
+        orderStatus: status,
+      };
+      const response = await updateOrderStatus(orderId, data);
 
-    // Simulate API call with timeout
-    await new Promise((resolve) => setTimeout(resolve, 800))
+      if (response.status === 200) {
+        console.log("Order status updated successfully.");
 
-    onStatusUpdate(orderId, status)
-    setIsSubmitting(false)
-    onOpenChange(false)
-  }
+        // Send SMS notification to the customer
+        const smsMessages = {
+          preparing: "Your order is being prepared.",
+          ready: "Your order is ready for pickup.",
+          completed: "Your order has been completed. Enjoy your meal!",
+          cancelled: "Your order has been cancelled. If you have any questions, please contact support.",
+        };
+
+        const smsData = {
+          to: "94774338424", // Assuming phone number is available
+          message: smsMessages[status as keyof typeof smsMessages],
+        };
+
+        try {
+          // await sendSMSNotification(smsData);
+          console.log("SMS notification sent successfully.");
+        } catch (smsError) {
+          console.error("Error sending SMS notification:", smsError);
+        }
+
+        // Call the onStatusUpdate callback
+        onStatusUpdate(orderId, status);
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data && data.message) {
+          console.error(`Order status update failed: ${data.message}`);
+        } else {
+          console.error("An unexpected error occurred. Please try again.");
+        }
+      } else {
+        console.error("An unexpected error occurred. Please check your network and try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+      onOpenChange(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,28 +107,28 @@ export function UpdateOrderStatusModal({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <RadioGroup value={status} onValueChange={setStatus} className="gap-4">
+          <RadioGroup value={status} onValueChange={(value) => setStatus(value as OrderStatus)} className="gap-4">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="preparing" id="preparing" />
+              <RadioGroupItem value="PREPARING" id="preparing" />
               <Label htmlFor="preparing" className="flex items-center">
                 <span className="h-2 w-2 rounded-full bg-amber-500 mr-2"></span>
                 Preparing
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="ready" id="ready" />
+              <RadioGroupItem value="REDY_FOR_PICKUP" id="ready" />
               <Label htmlFor="ready" className="flex items-center">
                 <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
                 Ready for Pickup
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
+            {/* <div className="flex items-center space-x-2">
               <RadioGroupItem value="completed" id="completed" />
               <Label htmlFor="completed" className="flex items-center">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 mr-2"></span>
                 Completed
               </Label>
-            </div>
+            </div> */}
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="cancelled" id="cancelled" />
               <Label htmlFor="cancelled" className="flex items-center">
@@ -89,7 +142,7 @@ export function UpdateOrderStatusModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button onClick={() => handleStatusChange(status)} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
