@@ -1,6 +1,6 @@
 "use client"
 
-import { Receipt, User } from "lucide-react"
+import { Phone, Receipt, User } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,9 +17,9 @@ import { UpdateOrderStatusModal } from "./update-order-status-modal"
 import { useState } from "react"
 
 interface OrderItem {
-  name: string
-  quantity: number
-  price: string
+  itemName: string
+  quentity: number
+  total: string
 }
 
 interface OrderDetailsProps {
@@ -33,6 +33,7 @@ interface OrderDetailsProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onStatusUpdate?: (orderId: string, newStatus: string) => void
+  deliveryFee: string
 }
 
 export function OrderDetailsModal({
@@ -44,6 +45,7 @@ export function OrderDetailsModal({
   date,
   payment,
   open,
+  deliveryFee,
   onOpenChange,
   onStatusUpdate,
 }: OrderDetailsProps) {
@@ -60,8 +62,22 @@ export function OrderDetailsModal({
   }
 
   // Calculate subtotal (total minus estimated tax)
-  const subtotal = Number.parseFloat(total.replace("$", "")) * 0.9
-  const tax = Number.parseFloat(total.replace("$", "")) * 0.1
+  // const subtotal = Number.parseFloat(payment.replace("$", "")) * 0.9
+  // const deliveryFee = Number.parseFloat(total.replace("$", "")) * 0.1
+
+  // console.log(`items => `, items);
+
+  // Convert the date string to a readable format
+  const formattedDate = new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const formattedTime = new Date(date).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
     <>
@@ -88,18 +104,26 @@ export function OrderDetailsModal({
                     <p className="font-medium">{customer}</p>
                   </div>
                 </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Phone className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{"94774338424"}</p>
+                  </div>
+                </div>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Order Info</h3>
                 <div className="mt-1 space-y-1">
                   <div className="flex justify-between">
                     <span className="text-sm">Date:</span>
-                    <span className="text-sm font-medium">{date}</span>
+                    <span className="text-sm font-medium">{formattedDate} | {formattedTime}</span>
                   </div>
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-sm">Payment:</span>
                     <span className="text-sm font-medium">{payment}</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between">
                     <span className="text-sm">Status:</span>
                     <OrderStatus status={status} />
@@ -117,13 +141,18 @@ export function OrderDetailsModal({
                 {items.map((item, index) => (
                   <div key={index} className="flex justify-between">
                     <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                      <p className="font-medium">{item.itemName}</p>
+                      <p className="text-sm text-muted-foreground">Quantity: {item.quentity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">{item.price}</p>
+                      <p className="font-medium">${item.total}</p>
                       <p className="text-sm text-muted-foreground">
-                        ${(Number.parseFloat(item.price.replace("$", "")) * item.quantity).toFixed(2)}
+                        {/* Ensure item.price is a valid string before calling replace */}
+                        ${(
+                          (Number.parseFloat((item.total || "0").replace("$", "")) *
+                            item.quentity) ||
+                          0
+                        ).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -139,16 +168,16 @@ export function OrderDetailsModal({
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${payment}.00</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax (10%)</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>Delivery</span>
+                  <span>${deliveryFee}.00</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-medium">
                   <span>Total</span>
-                  <span>{total}</span>
+                  <span>${payment}.00</span>
                 </div>
               </div>
             </div>
@@ -158,7 +187,7 @@ export function OrderDetailsModal({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-            <Button variant="outline">Print Receipt</Button>
+            {/* <Button variant="outline">Print Receipt</Button> */}
             <Button onClick={handleUpdateStatus}>Update Status</Button>
           </DialogFooter>
         </DialogContent>
@@ -181,10 +210,11 @@ function OrderStatus({ status }: { status: string }) {
       variant="outline"
       className={cn(
         "capitalize",
-        status === "completed" && "border-emerald-500 text-emerald-500",
-        status === "preparing" && "border-amber-500 text-amber-500",
-        status === "ready" && "border-blue-500 text-blue-500",
-        status === "cancelled" && "border-rose-500 text-rose-500",
+        status === "PLACED" && "border-emerald-500 text-emerald-500",
+        status === "COMPLETED" && "border-emerald-500 text-emerald-500",
+        status === "PREPARING" && "border-amber-500 text-amber-500",
+        status === "READY_FOR_PICKUP" && "border-blue-500 text-blue-500",
+        status === "CANCELLED" && "border-rose-500 text-rose-500",
       )}
     >
       {status}
