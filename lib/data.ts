@@ -124,14 +124,7 @@ export const restaurants: Restaurant[] = [
 ]
 
 export const menuCategories: MenuCategory[] = [
-  { id: "cat1", restaurantId: "rest1", name: "Burgers" },
-  { id: "cat2", restaurantId: "rest1", name: "Sides" },
-  { id: "cat3", restaurantId: "rest1", name: "Drinks" },
-  { id: "cat4", restaurantId: "rest1", name: "Desserts" },
-  { id: "cat5", restaurantId: "rest2", name: "Pizzas" },
-  { id: "cat6", restaurantId: "rest2", name: "Pastas" },
-  { id: "cat7", restaurantId: "rest2", name: "Salads" },
-  { id: "cat8", restaurantId: "rest2", name: "Drinks" },
+  { id: "cat1", restaurantId: "rest1", name: "Burgers" }
 ]
 
 export const menuItems: MenuItem[] = [

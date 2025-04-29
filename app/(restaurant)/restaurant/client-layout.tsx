@@ -1,15 +1,12 @@
-"use client"
+"use client";
 
-import React from "react"
-
-import { useState, Suspense } from "react"
-import { Inter } from "next/font/google"
-import { Bell, ChevronDown, Menu, Search } from "lucide-react"
-import { ThemeProvider } from "@/components/theme-provider"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import React, { useState, Suspense } from "react";
+import { Inter } from "next/font/google";
+import { Bell, ChevronDown, Menu, Search } from "lucide-react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,36 +14,46 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Sidebar } from "@/components/restaurant/sidebar"
+} from "@/components/ui/dropdown-menu";
+import { Sidebar } from "@/components/restaurant/sidebar";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export default function ClientLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    // Default to closed on mobile, open on desktop
-    return typeof window !== "undefined" ? window.innerWidth >= 768 : false
-  })
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Update sidebar state on window resize
   React.useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setSidebarOpen(false)
+        setSidebarOpen(false);
       }
-    }
+    };
 
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleProfileClick = () => {
+    router.push("/restaurant/profile");
+  };
+
+  const handleSettingsClick = () => {
+    console.log("Settings clicked");
+  };
 
   return (
     <html lang="en">
-      <body className={cn("bg-background h-screen overflow-hidden", inter.className)}>
+      <body
+        className={cn("bg-background h-screen overflow-hidden", inter.className)}
+      >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <div className="flex h-screen max-h-screen overflow-hidden">
             <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
@@ -65,7 +72,11 @@ export default function ClientLayout({
                   <div className="flex-1 flex items-center gap-4 md:gap-8">
                     <div className="relative w-full max-w-md">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input type="search" placeholder="Search..." className="w-full pl-8 bg-background" />
+                      <Input
+                        type="search"
+                        placeholder="Search..."
+                        className="w-full pl-8 bg-background"
+                      />
                     </div>
                     <div className="ml-auto flex items-center gap-2">
                       <Button variant="ghost" size="icon" className="relative">
@@ -79,24 +90,35 @@ export default function ClientLayout({
                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                               <span className="text-sm font-medium">JD</span>
                             </div>
-                            <div className="hidden md:block text-sm font-medium">John Doe</div>
+                            <div className="hidden md:block text-sm font-medium">
+                              John Doe
+                            </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>My Account</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>Profile</DropdownMenuItem>
-                          <DropdownMenuItem>Settings</DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleProfileClick}>
+                            Profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleSettingsClick}>
+                            Settings
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>Logout</DropdownMenuItem>
+                          <DropdownMenuItem onClick={logout}>
+                            Logout
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                   </div>
                 </div>
               </header>
-              <main className="flex-1 overflow-auto p-4 md:p-6" style={{ height: "calc(100vh - 64px)" }}>
+              <main
+                className="flex-1 overflow-auto p-4 md:p-6"
+                style={{ height: "calc(100vh - 64px)" }}
+              >
                 <Suspense>{children}</Suspense>
               </main>
             </div>
@@ -104,5 +126,5 @@ export default function ClientLayout({
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

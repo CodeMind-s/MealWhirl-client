@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      router.push(getRouteForRole(user.role))
+      router.push(getRouteForRole(user.role, user.accountStatus))
     }
   }, [user, router])
 
