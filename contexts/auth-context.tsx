@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   createContext,
   useContext,
   useState,
@@ -10,8 +10,14 @@ import {
 import { useRouter } from "next/navigation";
 import { User, UserRole } from "@/types/User";
 import axiosInstance from "@/lib/middleware/axioinstance";
-import { getUserSession, removeUserSession, setUserSession } from "@/lib/middleware/auth";
+import {
+  getUserSession,
+  removeUserSession,
+  setUserSession,
+} from "@/lib/middleware/auth";
+import { USER_ACCOUNT_STATUS } from "@/constants/userConstants";
 
+// Define the AuthContext type
 interface AuthContextType {
   user: User | null;
   login: (
@@ -23,17 +29,16 @@ interface AuthContextType {
   register: (
     identifier: string,
     password: string,
-    role: string | undefined,
-    type: string
+    role?: string,
+    type?: string
   ) => Promise<{ success: boolean; error?: string }>;
 }
 
+// Create the AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const handleAuthResponse = (response: any) => {
-  const { data = {} } = response.data;
-  const { identifier, type, category, token = null } = data;
-
+// Utility function to map category to UserRole
+const mapCategoryToRole = (category: string): UserRole => {
   const roleMap: Record<string, UserRole> = {
     customers: "customer",
     drivers: "driver",
@@ -41,60 +46,94 @@ const handleAuthResponse = (response: any) => {
     super_admins: "admin",
     admins: "admin",
   };
+  return roleMap[category] || "customer";
+};
 
-  const role = roleMap[category];
+// Handle the authentication response
+const handleAuthResponse = (response: any): User => {
+  const { data = {} } = response.data;
+  const { identifier, type, category, token = null, accountStatus } = data;
 
-  const user = {
+  return {
     identifier,
     type,
-    role,
+    role: mapCategoryToRole(category),
     token,
+    accountStatus,
   };
+};
 
-  return user;
-}
+// Get the route based on user role and status
+export const getRouteForRole = (role: UserRole, status: string): string => {
+  let userPath = "/login";
+  switch (role) {
+    case "customer":
+      userPath = "/profile";
+      break;
+    case "driver":
+      userPath = "/driver";
+      break;
+    case "restaurant":
+      userPath = "/restaurant";
+      break;
+    case "admin":
+      userPath = "/admin";
+      break;
+    default:
+      return userPath;
+  }
 
+  const nonProfileRoutes = ["customer", "driver", "admin"];
+
+  if (
+    !nonProfileRoutes.includes(role) &&
+    status === USER_ACCOUNT_STATUS.CREATING
+  ) {
+    return `${userPath}/profile`;
+  }
+  return userPath;
+};
+
+// AuthProvider Component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Fetch user session on mount
   useEffect(() => {
-    const fetchUserSession = async () => {
-      console.log("Fetching user session...");
-      const storedUser = await getUserSession();
-      const token = storedUser?.token || null;
-      if (token) {
-        setUser(storedUser);
-        router.push(getRouteForRole(storedUser.role));
-      } else {
-        console.log("No user session found, redirecting to login.");
-        setUser(null);
-        // router.push("/login");
+    const initializeUserSession = async () => {
+      try {
+        const storedUser = await getUserSession();
+        if (storedUser?.token) {
+          setUser(storedUser);
+        } else {
+          console.log("No user session found, redirecting to login.");
+          setUser(null);
+          router.push("/login");
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(true);
     };
 
-    fetchUserSession();
-  }, []);
+    initializeUserSession();
+  }, [router]);
 
+  // Login function
   const login = async (email: string, password: string) => {
     try {
-      const response = await axiosInstance.post<{
-        data: {
-          token: string;
-          identifier: string;
-          type: string;
-          category: string;
-        };
-      }>("/auth/v1/login", {
+      const response = await axiosInstance.post("/auth/v1/login", {
         identifier: email,
-        password: btoa(password), // Encode password in Base64
+        password: btoa(password),
       });
 
       const user = handleAuthResponse(response);
       setUser(user);
-      await setUserSession(user);
+      setUserSession(user);
+      router.push(getRouteForRole(user.role, user.accountStatus));
 
       return { success: true };
     } catch (error: any) {
@@ -105,31 +144,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Register function (if needed)
+  // Register function
   const register = async (
     identifier: string,
     password: string,
-    role: string | undefined,
-    type: string | undefined,
+    role?: string,
+    type?: string
   ) => {
     try {
-      const response = await axiosInstance.post<{
-        data: {
-          identifier: string;
-          type: string;
-          category: string;
-        };
-      }>("/auth/v1/register", {
+      const response = await axiosInstance.post("/auth/v1/register", {
         [`${type}`]: identifier,
-        password: btoa(password), // Encode password in Base64
+        password: btoa(password),
         type,
         category: role,
       });
 
       const user = handleAuthResponse(response);
-
       setUser(user);
-      await setUserSession(user);
+      setUserSession(user);
 
       return { success: true };
     } catch (error: any) {
@@ -154,25 +186,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Custom hook to use AuthContext
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
-
-export function getRouteForRole(role: UserRole): string {
-  switch (role) {
-    case "customer":
-      return "/profile";
-    case "driver":
-      return "/driver";
-    case "restaurant":
-      return "/restaurant";
-    case "admin":
-      return "/super";
-    default:
-      return "/login";
-  }
 }

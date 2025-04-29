@@ -47,6 +47,14 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "../ui/toast";
 import { sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
 
+import dynamic from "next/dynamic";
+
+// Dynamically import Map with SSR disabled
+const Map = dynamic(() => import("./Map"), {
+  ssr: false,
+  loading: () => <p>Loading map...</p>,
+});
+
 interface DeliveryAddress {
   latitude: number;
   longitude: number;
@@ -95,6 +103,11 @@ interface OrderStatusDto {
 export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
   const [orderDetails, setOrderDetails] = useState<Order | null>(null);
   const { toast } = useToast();
+  const [orderDestination, setOrderDestination] = useState(false);
+  const [Latitude, setLatitude] = useState<number>(6.952216);
+  const [Longitude, setLongitude] = useState<number>(80.985924);
+  const [restLatitude, setRestLatitude] = useState<number>(6.92254243510281);
+  const [restLongitude, setRestLongitude] = useState<number>(79.91822361239088);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -102,6 +115,8 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
         const response: any = await getOrderById(orderId);
         if (response.data) {
           setOrderDetails(response.data);
+          setLatitude(response.data.deliveryAddress.latitude);
+          setLongitude(response.data.deliveryAddress.longitude);
         }
       } catch (err: any) {
         if (err.response) {
@@ -119,7 +134,6 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
         }
       }
     };
-
     fetchOrderDetails();
   }, []);
 
@@ -236,9 +250,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
   return (
     <div className="grid gap-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Order #{orderId}
-        </h2>
+        <h2 className="text-2xl font-bold tracking-tight">Order #{orderId}</h2>
         <Badge
           className={`${statusColors[orderDetails.orderStatus]} text-white`}
         >
@@ -283,10 +295,25 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               </div>
             </div>
             <div className="flex justify-center mt-2">
-              <Button className="w-full" variant="outline">
-                <Navigation className="mr-2 h-4 w-4" />
-                Navigate to Address
-              </Button>
+              {orderDestination ? (
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => setOrderDestination(false)}
+                >
+                  <Navigation className="mr-2 h-4 w-4" />
+                  Close Navigation
+                </Button>
+              ) : (
+                <Button
+                  className="w-full  bg-blue-500 text-white hover:bg-blue-600"
+                  variant="outline"
+                  onClick={() => setOrderDestination(true)}
+                >
+                  <Navigation className="mr-2 h-4 w-4" />
+                  Navigate to Address
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -333,6 +360,24 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           </CardContent>
         </Card>
       </div>
+      {orderDestination && (
+        <Card>
+          {/* <OrderDestination /> */}
+          <Card className="w-full h-full">
+            <CardHeader>
+              <CardTitle>Route To Destination</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[500px]">
+              <Map
+                latitude={Latitude}
+                longitude={Longitude}
+                restLatitude={restLatitude}
+                restLongitude={restLongitude}
+              />
+            </CardContent>
+          </Card>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -378,7 +423,11 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => handleStatusChange("PICKED_UP")}>Continue</AlertDialogAction>
+                    <AlertDialogAction
+                      onClick={(e) => handleStatusChange("PICKED_UP")}
+                    >
+                      Continue
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -404,7 +453,11 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => handleStatusChange("ON_THE_WAY")}>Confirm</AlertDialogAction>
+                    <AlertDialogAction
+                      onClick={(e) => handleStatusChange("ON_THE_WAY")}
+                    >
+                      Confirm
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -430,7 +483,11 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={(e) => handleStatusChange("DELIVERED")}>Confirm</AlertDialogAction>
+                    <AlertDialogAction
+                      onClick={(e) => handleStatusChange("DELIVERED")}
+                    >
+                      Confirm
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

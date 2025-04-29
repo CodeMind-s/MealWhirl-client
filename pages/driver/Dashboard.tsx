@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OrdersProvider, useOrders } from "@/contexts/orders-context";
+import { useAuth } from "@/contexts/auth-context";
 import { logout } from "@/lib/actions";
 import { getUserFromCookie } from "@/lib/auth";
 import { getAllOrders, getOrdersByDeliveryPersonId } from "@/lib/api/orderApi";
@@ -33,6 +34,7 @@ export default function Dashboard() {
 }
 
 function DashboardContent() {
+  const { logout } = useAuth();
   const { orders } = useOrders();
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
@@ -146,7 +148,6 @@ function DashboardContent() {
 
   const handleLogout = () => {
     logout();
-    redirect("/login");
   };
 
   useEffect(() => {
