@@ -24,6 +24,13 @@ import { use, useEffect, useState } from "react";
 import { getOrderById } from "@/lib/api/orderApi";
 import { promises } from "dns";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+// Dynamically import Map with SSR disabled
+const DriverMap = dynamic(() => import("../../../../../components/driver/DriverMap"), {
+  ssr: false,
+  loading: () => <p>Loading map...</p>,
+});
 
 interface DeliveryAddress {
   latitude: number;
@@ -79,6 +86,12 @@ export default function OrderDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Define the coordinates for the map
+  const [Latitude, setLatitude] = useState<number>(6.952216);
+  const [Longitude, setLongitude] = useState<number>(80.985924);
+  const [restLatitude, setRestLatitude] = useState<number>(6.92254243510281);
+  const [restLongitude, setRestLongitude] = useState<number>(79.91822361239088);
+
   useEffect(() => {
     const unwrapParams = async () => {
       const resolvedParams = await params;
@@ -94,6 +107,8 @@ export default function OrderDetailPage({
         const response: any = await getOrderById(orderId);
         if (response.data) {
           setOrderDetails(response.data);
+          setLatitude(response.data.deliveryAddress.latitude);
+          setLongitude(response.data.deliveryAddress.longitude);
         }
       } catch (err: any) {
         setError(
@@ -304,6 +319,19 @@ export default function OrderDetailPage({
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle>Track Delivery</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <DriverMap
+                latitude={Latitude}
+                longitude={Longitude}
+                restLatitude={restLatitude}
+                restLongitude={restLongitude}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle>Order Details</CardTitle>
             </CardHeader>
             <CardContent>
@@ -343,7 +371,7 @@ export default function OrderDetailPage({
                           <span>{formatCurrency(item.total)}</span>
                         </div>
                         <p className="text-sm text-gray-500">
-                          {item.quentity}{" "}x{" "}
+                          {item.quentity} x{" "}
                           {formatCurrency(item.total / item.quentity)}
                         </p>
                       </div>
