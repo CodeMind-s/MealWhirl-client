@@ -34,7 +34,10 @@ export default function OrdersPage() {
         try {
           const response: any = await getOrdersByUserId(userId as string);
           if (response.data) {
-            setUserOrders(response.data);
+            const ordersData = response.data.sort((a: any, b: any) => {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            setUserOrders(ordersData);
           }
         } catch (err: any) {
           if (err.response) {
