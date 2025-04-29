@@ -86,6 +86,7 @@ export function SettingsPage() {
   const router = useRouter();
   const [restaurantData, setRestaurantData] = useState({
     name: "",
+    profilePicture: "",
     address: {
       street: "",
       city: "",
@@ -120,6 +121,7 @@ export function SettingsPage() {
         if (userData) {
           setRestaurantData({
             name: userData.name || "",
+            profilePicture: userData.profilePicture || "",
             address: {
               street: userData.address?.street || "",
               city: userData.address?.city || "",
