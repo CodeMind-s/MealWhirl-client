@@ -142,9 +142,6 @@ export function MenuItemsPage() {
     return item.category === selectedCategory;
   });
 
-
-  console.log("Filtered Menu Items:", filteredMenuItems);
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
