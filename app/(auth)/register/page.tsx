@@ -2,10 +2,10 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, getRouteForRole } from "@/contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,17 +16,10 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"customer" | "restaurant">("customer");
+  const [role, setRole] = useState<"customers" | "restaurants" | "drivers">("customers");
   const [isLoading, setIsLoading] = useState(false);
-  const { user, register } = useAuth();
-  const router = useRouter();
+  const { register } = useAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      router.push(getRouteForRole(user.role));
-    }
-  }, [user, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -126,7 +119,7 @@ export default function RegisterPage() {
                 <RadioGroup
                   value={role}
                   onValueChange={(value) =>
-                    setRole(value as "customer" | "restaurant")
+                    setRole(value)
                   }
                 >
                   <div className="flex items-center space-x-2">

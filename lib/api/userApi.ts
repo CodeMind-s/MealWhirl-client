@@ -8,13 +8,18 @@ interface ApiResponse<T> {
 // Fetch user details by category and ID
 export const getUserByCategoryAndId = async (
   category: string,
-  userId: string | null
+  userId: string | null,
+  token: string | null
 ): Promise<any> => {
   try {
     interface UserResponse {
       data: any;
     }
-    const response = await axiosInstance.get(`/users/v1/${category}/${userId}`);
+    const response = await axiosInstance.get(`/users/v1/${category}/${userId}`, {
+      headers: {
+        ...(token ? { Authorization: token } : {}),
+      }
+    });
     const responseData = response.data as UserResponse; // Type assertion
     return responseData.data;
   } catch (error: any) {
@@ -75,26 +80,6 @@ export const deleteUser = async (userId: string) => {
   } catch (error: any) {
     console.error(
       "Error deleting user:",
-      error.response?.data || error.message
-    );
-    throw error.response?.data || error.message;
-  }
-};
-
-// Change user password
-export const changeUserPassword = async (
-  userId: string,
-  passwordData: { oldPassword: string; newPassword: string }
-) => {
-  try {
-    const response = await axiosInstance.post(
-      `/users/${userId}/change-password`,
-      passwordData
-    );
-    return response.data;
-  } catch (error: any) {
-    console.error(
-      "Error changing user password:",
       error.response?.data || error.message
     );
     throw error.response?.data || error.message;

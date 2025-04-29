@@ -37,7 +37,7 @@ const defaultProfilePicture =
 export default function ProfilePage() {
   const { user } = useAuth();
   const [userData, setUserData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -45,7 +45,8 @@ export default function ProfilePage() {
         const { identifier = null } = user || {};
         const data = await getUserByCategoryAndId(
           USER_CATEGORIES.RESTAURANT,
-          identifier
+          identifier,
+          null
         );
         setUserData(data);
       } catch (error) {
@@ -60,10 +61,22 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  if (isLoading || !userData) {
+  if (isLoading) {
     return (
       <div>
         <Loader>Loading. Be patient...</Loader>
+      </div>
+    );
+  }
+
+  // edit profile page
+  if (!isLoading && !userData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h1 className="text-2xl font-bold mb-4">User not found</h1>
+        <Link href="/login" className="text-blue-500 underline">
+          Go to Login
+        </Link>
       </div>
     );
   }

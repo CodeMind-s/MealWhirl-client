@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/lib/cart-context";
-import { getUserByCategoryAndId, getUsersByCategory } from "@/lib/api/userApi";
+import { getUserByCategoryAndId } from "@/lib/api/userApi";
 import { USER_CATEGORIES } from "@/constants/userConstants";
 import { MenuCategory, MenuItem, Restaurant } from "@/types/Restaurant";
 import { mapToRestaurant } from "../page";
@@ -42,13 +42,15 @@ export const mapToMenuItems = (
 ): MenuItem[] => {
   return menu.map((menuItem) => ({
     id: menuItem.name,
+    category: menuItem.category,
     restaurantId: restaurantId, // Use the provided restaurantId
     categoryId: categoryIdMap[menuItem.category] || "unknown", // Map category to categoryId
     name: menuItem.name, // Map the name field
     description: menuItem.description, // Map the description field
     price: menuItem.price, // Map the price field
     image: menuItem.image || undefined, // Map the image field (optional)
-    isPopular: menuItem.isPopular || false, // Map the isPopular field (optional)
+    isPopular: menuItem.isPopular || false, // Map the isPopular field (optional),
+    status: menuItem.isAvailable ? "active" : "inactive", // Map the status field (optional)
   }));
 };
 
@@ -79,7 +81,8 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
       try {
         const data = await getUserByCategoryAndId(
           USER_CATEGORIES.RESTAURANT,
-          params.id
+          params.id,
+          null
         );
         setRestaurant(mapToRestaurant([data])[0]);
         const menuCategories = mapToMenuCategories(data.menu, data.identifier);

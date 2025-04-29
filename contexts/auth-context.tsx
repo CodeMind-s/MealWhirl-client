@@ -15,7 +15,8 @@ import {
   removeUserSession,
   setUserSession,
 } from "@/lib/middleware/auth";
-import { USER_ACCOUNT_STATUS } from "@/constants/userConstants";
+import { USER_ACCOUNT_STATUS, USER_CATEGORIES } from "@/constants/userConstants";
+import { getUserByCategoryAndId } from "@/lib/api/userApi";
 
 // Define the AuthContext type
 interface AuthContextType {
@@ -26,6 +27,7 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  setUser: (user: User | null) => void;
   register: (
     identifier: string,
     password: string,
@@ -60,6 +62,9 @@ const handleAuthResponse = (response: any): User => {
     role: mapCategoryToRole(category),
     token,
     accountStatus,
+    basic: {
+      name: null
+    }
   };
 };
 
@@ -83,13 +88,10 @@ export const getRouteForRole = (role: UserRole, status: string): string => {
       return userPath;
   }
 
-  const nonProfileRoutes = ["customer", "driver", "admin"];
+  const profileRoutes = ["restaurant"];
 
-  if (
-    !nonProfileRoutes.includes(role) &&
-    status === USER_ACCOUNT_STATUS.CREATING
-  ) {
-    return `${userPath}/profile`;
+  if (profileRoutes.includes(role) && status === USER_ACCOUNT_STATUS.CREATING) {
+    return `${userPath}/settings`;
   }
   return userPath;
 };
@@ -131,6 +133,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const user = handleAuthResponse(response);
+      if(user.accountStatus !== USER_ACCOUNT_STATUS.CREATING) {
+        const data = await getUserByCategoryAndId(`${user.role}s`, user.identifier, user.token);
+        user.basic = {
+          name: data?.name || user.identifier
+        }
+      }
       setUser(user);
       setUserSession(user);
       router.push(getRouteForRole(user.role, user.accountStatus));
@@ -162,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = handleAuthResponse(response);
       setUser(user);
       setUserSession(user);
+      router.push("/login");
 
       return { success: true };
     } catch (error: any) {
@@ -180,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, setUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

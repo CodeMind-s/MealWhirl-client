@@ -6,4 +6,7 @@ export interface User {
   role: UserRole;
   token: string;
   accountStatus: string;
+  basic: {
+    name: string | null;
+  }
 }
