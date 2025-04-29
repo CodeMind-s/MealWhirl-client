@@ -42,7 +42,7 @@ type OrderStatus =
   | "PLACED"
   | "ACCEPTED"
   | "PREPARING"
-  | "READY_FOR_PICKUP"
+  | "REDY_FOR_PICKUP"
   | "PICKED_UP"
   | "ON_THE_WAY"
   | "DELIVERED"
@@ -58,7 +58,7 @@ export default function OrderCard({ order, onClick }: OrderCardProps) {
     PLACED: "bg-yellow-500 hover:bg-yellow-600",
     ACCEPTED: "bg-blue-500 hover:bg-blue-600",
     PREPARING: "bg-orange-500 hover:bg-orange-600",
-    READY_FOR_PICKUP: "bg-indigo-500 hover:bg-indigo-600",
+    REDY_FOR_PICKUP: "bg-indigo-500 hover:bg-indigo-600",
     PICKED_UP: "bg-cyan-500 hover:bg-cyan-600",
     ON_THE_WAY: "bg-primary hover:bg-primary/90",
     DELIVERED: "bg-green-500 hover:bg-green-600",
@@ -69,7 +69,7 @@ export default function OrderCard({ order, onClick }: OrderCardProps) {
     PLACED: "Placed",
     ACCEPTED: "Accepted",
     PREPARING: "Preparing",
-    READY_FOR_PICKUP: "Ready for Pickup",
+    REDY_FOR_PICKUP: "Ready for Pickup",
     PICKED_UP: "Picked Up",
     ON_THE_WAY: "On The Way",
     DELIVERED: "Delivered",

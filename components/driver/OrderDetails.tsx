@@ -85,7 +85,7 @@ type OrderStatus =
   | "PLACED"
   | "ACCEPTED"
   | "PREPARING"
-  | "READY_FOR_PICKUP"
+  | "REDY_FOR_PICKUP"
   | "PICKED_UP"
   | "ON_THE_WAY"
   | "DELIVERED"
@@ -161,15 +161,15 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
 
         // Send SMS notification to the customer
         const smsMessages = {
-          PLACED: "Your order has been placed successfully!",
-          ACCEPTED: "Your order has been accepted by the restaurant.",
-          PREPARING: "Your order is being prepared.",
-          READY_FOR_PICKUP: "Your order is ready for pickup.",
-          PICKED_UP: "Your order has been picked up by the delivery person.",
-          ON_THE_WAY: "Your order is on the way!",
-          DELIVERED: "Your order has been delivered. Enjoy your meal!",
+          PLACED: "Our valued cutomer, Your order has been placed successfully!",
+          ACCEPTED: "Our valued cutomer, Your order has been accepted by the restaurant.",
+          PREPARING: "Our valued cutomer, Your order is being prepared.",
+          REDY_FOR_PICKUP: "Our valued cutomer,Your order is ready for pickup.",
+          PICKED_UP: "Our valued cutomer, Your order has been picked up by the delivery person.",
+          ON_THE_WAY: "Our valued cutomer,Your order is on the way!",
+          DELIVERED: "Our valued cutomer, Your order has been delivered. Enjoy your meal!",
           CANCELLED:
-            "Your order has been cancelled. If you have any questions, please contact support.",
+            "Our valued cutomer, Your order has been cancelled. If you have any questions, please contact support.",
         };
 
         const smsData = {
@@ -177,7 +177,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           message: smsMessages[status],
         };
         try {
-          await sendSMSNotification(smsData);
+          // await sendSMSNotification(smsData);
           toast({
             title: "Notification Sent",
             description: "Customer has been notified via SMS.",
@@ -229,7 +229,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
     PLACED: "Placed",
     ACCEPTED: "Accepted",
     PREPARING: "Preparing",
-    READY_FOR_PICKUP: "Ready for Pickup",
+    REDY_FOR_PICKUP: "Ready for Pickup",
     PICKED_UP: "Picked Up",
     ON_THE_WAY: "On The Way",
     DELIVERED: "Delivered",
@@ -240,7 +240,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
     PLACED: "bg-yellow-500",
     ACCEPTED: "bg-blue-500",
     PREPARING: "bg-orange-500",
-    READY_FOR_PICKUP: "bg-indigo-500",
+    REDY_FOR_PICKUP: "bg-indigo-500",
     PICKED_UP: "bg-cyan-500",
     ON_THE_WAY: "bg-primary",
     DELIVERED: "bg-green-500",
@@ -390,14 +390,13 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           <div className="grid gap-4">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 text-center">
               <div
-                className={`p-4 rounded-lg border ${
-                  orderDetails.orderStatus === "READY_FOR_PICKUP" ||
+                className={`p-4 rounded-lg border ${orderDetails.orderStatus === "REDY_FOR_PICKUP" ||
                   orderDetails.orderStatus === "PREPARING" ||
                   orderDetails.orderStatus === "ACCEPTED" ||
                   orderDetails.orderStatus === "PLACED"
-                    ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20"
-                    : ""
-                }`}
+                  ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20"
+                  : ""
+                  }`}
               >
                 <Package className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
                 <div className="font-medium">Ready for Pickup</div>
@@ -405,11 +404,10 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div
-                    className={`p-4 rounded-lg border ${
-                      orderDetails.orderStatus === "PICKED_UP"
-                        ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20"
-                        : ""
-                    }`}
+                    className={`p-4 rounded-lg border ${orderDetails.orderStatus === "PICKED_UP"
+                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20"
+                      : ""
+                      }`}
                   >
                     <HandPlatter className="h-6 w-6 mx-auto mb-2 text-cyan-500" />
                     <div className="font-medium">Picked Up</div>
@@ -436,11 +434,10 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div
-                    className={`p-4 rounded-lg border ${
-                      orderDetails.orderStatus === "ON_THE_WAY"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-                        : ""
-                    }`}
+                    className={`p-4 rounded-lg border ${orderDetails.orderStatus === "ON_THE_WAY"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
+                      : ""
+                      }`}
                   >
                     <Truck className="h-6 w-6 mx-auto mb-2 text-blue-500" />
                     <div className="font-medium">On The Way</div>
@@ -467,11 +464,10 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <div
-                    className={`p-4 rounded-lg border ${
-                      orderDetails.orderStatus === "DELIVERED"
-                        ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                        : ""
-                    }`}
+                    className={`p-4 rounded-lg border ${orderDetails.orderStatus === "DELIVERED"
+                      ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                      : ""
+                      }`}
                   >
                     <CheckCircle2 className="h-6 w-6 mx-auto mb-2 text-green-500" />
                     <div className="font-medium">Delivered</div>

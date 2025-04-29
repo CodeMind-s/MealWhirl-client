@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { redirect } from "next/navigation";
 import { Bell, ChevronLeft, LogOut, Menu, Moon, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OrdersProvider, useOrders } from "@/contexts/orders-context";
 import { useAuth } from "@/contexts/auth-context";
-import { getOrdersByDeliveryPersonId } from "@/lib/api/orderApi";
+import { logout } from "@/lib/actions";
+import { getUserFromCookie } from "@/lib/auth";
+import { getAllOrders, getOrdersByDeliveryPersonId } from "@/lib/api/orderApi";
+import { useToast } from "@/hooks/use-toast";
+import notifySound from "@/assets/audio/notify.mp3";
 
 export default function Dashboard() {
   return (
@@ -32,6 +36,7 @@ export default function Dashboard() {
 function DashboardContent() {
   const { logout } = useAuth();
   const { orders } = useOrders();
+  const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [user, setUser] = useState<any | null>(null);
   const [deliveryPersonId, setDeliveryPersonId] = useState<string>(
@@ -44,19 +49,43 @@ function DashboardContent() {
 
   const [driverOrders, setDriverOrders] = useState<any>([]);
 
+  // Add a state to track if audio is enabled
+  const [audioEnabled, setAudioEnabled] = useState(false);
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
         const response = await getOrdersByDeliveryPersonId(deliveryPersonId);
         if (response.data) {
           setDriverOrders(response.data);
+          console.log(`driverOrders => `, response.data);
+          // Check for orders with status "READY_TO_PICKUP"
+          const readyToPickupOrders = Array.isArray(response.data)
+            ? response.data.filter(
+              (order: any) => order.orderStatus === "REDY_FOR_PICKUP"
+            )
+            : [];
+
+          if (readyToPickupOrders.length > 0 && audioEnabled) {
+            // Play sound notification
+            const audio = new Audio(notifySound);
+            audio.play().catch((e) => {
+              console.warn('Audio play blocked:', e);
+            });
+
+            toast({
+              title: "New Orders Ready to Pickup",
+              description: `${readyToPickupOrders.length} orders are ready to pickup.`,
+              variant: "default",
+            });
+          }
         }
       } catch (err: any) {
         if (err.response) {
           const { data } = err.response;
 
           if (data && data.message) {
-            console.log(`Order Details Fetching Faild: ${data.message}`);
+            console.log(`Order Details Fetching Failed: ${data.message}`);
           } else {
             console.log("An unexpected error occurred. Please try again.");
           }
@@ -69,7 +98,7 @@ function DashboardContent() {
     };
 
     fetchOrderDetails();
-  }, []);
+  }, [audioEnabled]);
 
   useEffect(() => {
     const filterTodayOrders = async () => {
@@ -88,24 +117,24 @@ function DashboardContent() {
 
   useEffect(() => {
     const fetchUser = async () => {
-        const pendingOrders = todayOrders.filter(
-            (order: any) =>
-              order.orderStatus !== "ON_THE_WAY" &&
-              order.orderStatus !== "DELIVERED"
-          );
-          const inProgressOrders = todayOrders.filter(
-            (order: any) => order.orderStatus === "ON_THE_WAY"
-          );
-          const completedOrders = todayOrders.filter(
-            (order: any) => order.orderStatus === "DELIVERED"
-          );
-    
-          setPendingOrders(pendingOrders);
-          setInProgressOrders(inProgressOrders);
-          setCompletedOrders(completedOrders);
+      const pendingOrders = todayOrders.filter(
+        (order: any) =>
+          order.orderStatus !== "ON_THE_WAY" &&
+          order.orderStatus !== "DELIVERED"
+      );
+      const inProgressOrders = todayOrders.filter(
+        (order: any) => order.orderStatus === "ON_THE_WAY"
+      );
+      const completedOrders = todayOrders.filter(
+        (order: any) => order.orderStatus === "DELIVERED"
+      );
+
+      setPendingOrders(pendingOrders);
+      setInProgressOrders(inProgressOrders);
+      setCompletedOrders(completedOrders);
     };
 
-    if(todayOrders) fetchUser();
+    if (todayOrders) fetchUser();
   }, [todayOrders]);
 
 
@@ -120,6 +149,20 @@ function DashboardContent() {
   const handleLogout = () => {
     logout();
   };
+
+  useEffect(() => {
+    // Add a click listener to enable audio playback
+    const enableAudio = () => {
+      setAudioEnabled(true);
+      window.removeEventListener('click', enableAudio);
+    };
+
+    window.addEventListener('click', enableAudio);
+
+    return () => {
+      window.removeEventListener('click', enableAudio);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,7 +240,7 @@ function DashboardContent() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {}}
+              onClick={() => { }}
               className="rounded-full"
             >
               <Bell className="h-5 w-5" />
@@ -289,7 +332,7 @@ function DashboardContent() {
               </div>
 
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="pending">
                     Pending
@@ -301,6 +344,7 @@ function DashboardContent() {
                   </TabsTrigger>
                   <TabsTrigger value="in_progress">In Progress</TabsTrigger>
                   <TabsTrigger value="delivered">Delivered</TabsTrigger>
+                  <TabsTrigger value="assigned">Assigned</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="mt-4">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -311,6 +355,19 @@ function DashboardContent() {
                         onClick={() => handleOrderSelect(order._id)}
                       />
                     ))}
+                  </div>
+                </TabsContent>
+                <TabsContent value="assigned" className="mt-4">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {driverOrders
+                      .filter((order: any) => order.orderStatus === "REDY_FOR_PICKUP")
+                      .map((order: any) => (
+                        <OrderCard
+                          key={order._id}
+                          order={order}
+                          onClick={() => handleOrderSelect(order._id)}
+                        />
+                      ))}
                   </div>
                 </TabsContent>
                 <TabsContent value="pending" className="mt-4">
@@ -346,6 +403,7 @@ function DashboardContent() {
                     ))}
                   </div>
                 </TabsContent>
+
               </Tabs>
             </div>
           </div>
