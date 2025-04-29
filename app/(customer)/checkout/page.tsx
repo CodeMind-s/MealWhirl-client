@@ -22,19 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/lib/cart-context";
 import { formatCurrency } from "@/lib/utils";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-import { convertToSubcurrency } from "@/lib/utils";
-import CheckoutPageComponent from "@/components/CheckoutPageComponent";
 import { createNewOrder } from "@/lib/api/orderApi";
 import { ToastAction } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
-
-if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
-  throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
-}
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
+import { usePlacedOrder } from "@/contexts/placed-order-context";
 
 interface ItemsData {
   itemName: string;
@@ -66,17 +57,25 @@ interface OrderStatusDto {
   specialInstructions: string;
 }
 
-export default function CheckoutPage() {
+export default function Checkout() {
   const { toast } = useToast();
   const { cart, cartTotal, cartSubtotal, deliveryFee, tax, clearCart } =
     useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<any>("CARD");
-  // const amount = 49.99;
+  const amount = 49.99;
   const [customerName, setCustomerName] = useState("induwara");
   const [description, setDescription] = useState("Payment for services");
   const [userId, setUserId] = useState<string>("67e43a6dd6708a25582d3aaa1");
   const router = useRouter();
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [zipCode, setZipCode] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [instructions, setInstructions] = useState<string>("");
+  const { setPlacedOrder } = usePlacedOrder();
 
   const handlePlaceOrder = async (e: any) => {
     e.preventDefault();
@@ -92,29 +91,24 @@ export default function CheckoutPage() {
             "https://th.bing.com/th/id/OIP.5XZGu7I9rqQc67dpzviiugHaE7?rs=1&pid=ImgDetMain",
         })),
         deliveryAddress: {
-          address: "address",
+          address: address,
           latitude: 0,
           longitude: 0,
         },
-        paymentId: "paymentId",
+        paymentId: "paymentid",
         paymentMethod: paymentMethod,
         totalAmount: cartTotal,
         deliveryFee: deliveryFee,
         distance: 10,
         duration: 30,
         fare: 5,
-        specialInstructions: description,
+        specialInstructions: instructions,
       };
+      setPlacedOrder(data);
       const response = await createNewOrder(data);
-
       if (response) {
-        toast({
-          title: "Success",
-          description: "Order created successfully.",
-        });
-        clearCart();
-        router.push("/profile/orders");
-        router.refresh();
+        // clearCart();
+        router.push("/payment");
       }
     } catch (error: any) {
       if (error.response) {
@@ -153,7 +147,7 @@ export default function CheckoutPage() {
 
     // Simulate order processing
     setTimeout(() => {
-      clearCart();
+      // clearCart();
       toast({
         title: "Order placed successfully!",
         description: "You can track your order in your profile.",
@@ -212,30 +206,61 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" required className="h-11" />
+                  <Input
+                    id="firstName"
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className="h-11"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" required className="h-11" />
+                  <Input
+                    id="lastName"
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    className="h-11"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Street Address</Label>
-                <Input id="address" required className="h-11" />
+                <Input
+                  id="address"
+                  onChange={(e) => setAddress(e.target.value)}
+                  required
+                  className="h-11"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Input id="city" required className="h-11" />
+                  <Input
+                    id="city"
+                    onChange={(e) => setCity(e.target.value)}
+                    required
+                    className="h-11"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zipCode">ZIP Code</Label>
-                  <Input id="zipCode" required className="h-11" />
+                  <Input
+                    id="zipCode"
+                    onChange={(e) => setZipCode(e.target.value)}
+                    required
+                    className="h-11"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" required className="h-11" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="h-11"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="instructions">
@@ -245,83 +270,9 @@ export default function CheckoutPage() {
                   id="instructions"
                   placeholder="E.g., Ring the doorbell, leave at the door, etc."
                   className="resize-none"
+                  onChange={(e) => setInstructions(e.target.value)}
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-100 dark:border-blue-900">
-            <CardHeader className="bg-blue-50 dark:bg-blue-950">
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-primary" />
-                Payment Method
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <RadioGroup
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-                className="space-y-4"
-              >
-                <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
-                  <RadioGroupItem value="CARD" id="CARD" />
-                  <Label htmlFor="CARD" className="flex-1 cursor-pointer">
-                    Credit/Debit Card
-                  </Label>
-                </div>
-                {/* <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
-                  <RadioGroupItem value="paypal" id="paypal" />
-                  <Label htmlFor="paypal" className="flex-1 cursor-pointer">
-                    PayPal
-                  </Label>
-                </div> */}
-                <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
-                  <RadioGroupItem value="CASH" id="CASH" />
-                  <Label htmlFor="CASH" className="flex-1 cursor-pointer">
-                    Cash on Delivery
-                  </Label>
-                </div>
-              </RadioGroup>
-
-              {paymentMethod === "CARD" && (
-                <div className="mt-6 space-y-4 p-4 border border-blue-100 dark:border-blue-900 rounded-md bg-blue-50/50 dark:bg-blue-950/50">
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input id="cardNumber" placeholder="1234 5678 9012 3456" required className="h-11" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input id="expiryDate" placeholder="MM/YY" required className="h-11" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input id="cvv" placeholder="123" required className="h-11" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nameOnCard">Name on Card</Label>
-                    <Input id="nameOnCard" required className="h-11" />
-                  </div> */}
-                  <Elements
-                    stripe={stripePromise}
-                    options={{
-                      mode: "payment",
-                      amount: convertToSubcurrency(cartTotal),
-                      currency: "usd",
-                      appearance: {
-                        theme: "night",
-                      },
-                    }}
-                  >
-                    <CheckoutPageComponent
-                      amount={cartTotal}
-                      customerName={customerName}
-                      description={description}
-                    />
-                  </Elements>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
