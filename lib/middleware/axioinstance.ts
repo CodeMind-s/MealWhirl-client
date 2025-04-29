@@ -16,7 +16,7 @@ axiosInstance.interceptors.request.use(
       if (token) {
         config.headers = {
           ...config.headers,
-          Authorization: token,
+          Authorization: config.headers.Authorization || token,
         };
       }
 

@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useAuth, getRouteForRole } from "@/contexts/auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,12 +17,6 @@ export default function LoginPage() {
   const { user, login } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
-
-  useEffect(() => {
-    if (user) {
-      router.push(getRouteForRole(user.role, user.accountStatus))
-    }
-  }, [user, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

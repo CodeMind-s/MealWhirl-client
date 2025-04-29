@@ -21,6 +21,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
+import { addMenuItem } from "@/lib/api/restaurantApi"
+import { useAuth } from "@/contexts/auth-context"
 
 interface AddMenuItemFormProps {
   open: boolean
@@ -29,15 +31,19 @@ interface AddMenuItemFormProps {
 }
 
 export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFormProps) {
+  const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     category: "",
-    price: "",
+    price: 0,
     description: "",
     status: "active",
     image: null as File | null,
     imagePreview: "",
+    ingredients: "",
+    dietaryRestrictions: "",
+    isAvailable: true,
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -47,29 +53,6 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          image: file,
-          imagePreview: reader.result as string,
-        }))
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const removeImage = () => {
-    setFormData((prev) => ({
-      ...prev,
-      image: null,
-      imagePreview: "",
-    }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,19 +70,23 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
       return
     }
 
-    // Simulate API call with timeout
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
     // Create new item object
     const newItem = {
       id: Math.floor(Math.random() * 1000),
       name: formData.name,
       category: formData.category,
-      price: formData.price.startsWith("$") ? formData.price : `$${formData.price}`,
+      price: formData.price,
       description: formData.description,
       status: formData.status,
-      image: formData.imagePreview || "/placeholder.svg?height=50&width=50",
+      image: formData.imagePreview || "https://img.freepik.com/free-icon/recipe_318-514507.jpg",
+      ingredients: formData.ingredients.split(",").map((item) => item.trim()),
+      dietaryRestrictions: formData.dietaryRestrictions.split(",").map((item) => item.trim()),
+      isAvailable: formData.isAvailable,
     }
+
+    // Simulate saving the item (console log for now)
+    const { id, status, ...rest } = newItem
+    await addMenuItem({ menu: rest, identifier: user.identifier })
 
     // Call the onAddItem callback if provided
     if (onAddItem) {
@@ -116,11 +103,14 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
     setFormData({
       name: "",
       category: "",
-      price: "",
+      price: 0,
       description: "",
       status: "active",
       image: null,
       imagePreview: "",
+      ingredients: "",
+      dietaryRestrictions: "",
+      isAvailable: true,
     })
     setIsSubmitting(false)
     onOpenChange(false)
@@ -128,7 +118,7 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Menu Item</DialogTitle>
           <DialogDescription>Add a new item to your restaurant's menu.</DialogDescription>
@@ -165,6 +155,7 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
                   <SelectItem value="Appetizer">Appetizer</SelectItem>
                   <SelectItem value="Dessert">Dessert</SelectItem>
                   <SelectItem value="Beverage">Beverage</SelectItem>
+                  <SelectItem value="Fast Food">Fast Food</SelectItem>
                   <SelectItem value="Side">Side</SelectItem>
                 </SelectContent>
               </Select>
@@ -177,6 +168,7 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
                 Price
               </Label>
               <Input
+                type="number"
                 id="price"
                 name="price"
                 value={formData.price}
@@ -218,45 +210,69 @@ export function AddMenuItemForm({ open, onOpenChange, onAddItem }: AddMenuItemFo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Item Image</Label>
-            <div className="flex items-center gap-4">
-              {formData.imagePreview ? (
-                <div className="relative h-24 w-24 rounded-md overflow-hidden border">
-                  <Image
-                    src={formData.imagePreview || "/placeholder.svg"}
-                    alt="Preview"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-1 right-1 h-6 w-6"
-                    onClick={removeImage}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="h-24 w-24 rounded-md border border-dashed flex items-center justify-center bg-muted">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                </div>
-              )}
-              <div className="flex-1">
-                <Input
-                  id="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="cursor-pointer"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload a square image (JPG, PNG). Recommended size: 500x500px.
-                </p>
+            <Label htmlFor="ingredients">Ingredients</Label>
+            <Input
+              id="ingredients"
+              name="ingredients"
+              value={formData.ingredients}
+              onChange={handleInputChange}
+              placeholder="lime, mint, water"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Separate ingredients with commas.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
+            <Input
+              id="dietaryRestrictions"
+              name="dietaryRestrictions"
+              value={formData.dietaryRestrictions}
+              onChange={handleInputChange}
+              placeholder="gluten, alcohol"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Separate restrictions with commas.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="isAvailable">Availability</Label>
+            <RadioGroup
+              id="isAvailable"
+              value={formData.isAvailable ? "true" : "false"}
+              onValueChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  isAvailable: value === "true",
+                }))
+              }
+              className="flex"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="true" id="available" />
+                <Label htmlFor="available">Available</Label>
               </div>
-            </div>
+              <div className="flex items-center space-x-2 ml-4">
+                <RadioGroupItem value="false" id="unavailable" />
+                <Label htmlFor="unavailable">Unavailable</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image">Image URL</Label>
+            <Input
+              id="image"
+              name="imagePreview"
+              value={formData.imagePreview}
+              onChange={handleInputChange}
+              placeholder="https://example.com/image.jpg"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Provide a URL for the item's image.
+            </p>
           </div>
 
           <DialogFooter>

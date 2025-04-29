@@ -21,6 +21,20 @@ import { useRouter } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export function extractInitials(name: string | null | undefined): string {
+  if (!name) return "";
+
+  const words = name.trim().split(" ");
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return words
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
 export default function ClientLayout({
   children,
 }: {
@@ -88,10 +102,10 @@ export default function ClientLayout({
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-sm font-medium">JD</span>
+                              <span className="text-sm font-medium">{extractInitials(user?.basic?.name)}</span>
                             </div>
                             <div className="hidden md:block text-sm font-medium">
-                              John Doe
+                              {user?.basic?.name}
                             </div>
                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           </Button>
