@@ -140,7 +140,7 @@ export function SettingsPage() {
             },
             paymentMethods: [DEFAULT_PAYMENT_METHOD],
           });
-          setSavedPaymentMethods([DEFAULT_PAYMENT_METHOD]);
+          setSavedPaymentMethods(userData.paymentMethods?.map((method) => method.id) || []);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -273,6 +273,17 @@ export function SettingsPage() {
                     handleInputChange("registrationNumber", e.target.value)
                   }
                   placeholder="Enter registration number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="restaurant-pic">Profile Picture</Label>
+                <Input
+                  id="restaurant-pic"
+                  value={restaurantData.profilePicture}
+                  onChange={(e) =>
+                    handleInputChange("profilePicture", e.target.value)
+                  }
+                placeholder="https://example.com/image.jpg" 
                 />
               </div>
 

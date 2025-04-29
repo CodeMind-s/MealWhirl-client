@@ -3,8 +3,10 @@ import { restaurants } from "../data";
 import axiosInstance from "../middleware/axioinstance";
 
 export const createUpdateResaurant = async (userData: Record<string, any>, status: string) => {
-  const { identifier, ...rest } = userData;
+  const { identifier, profilePicture, ...rest } = userData;
+
   const payload = {
+    profilePicture: userData?.profilePicture || null,
     restaurant: rest,
     ...(USER_ACCOUNT_STATUS.CREATING === status ? { identifier: identifier } : {}),
   };
