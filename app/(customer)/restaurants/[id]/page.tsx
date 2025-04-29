@@ -20,11 +20,19 @@ export const mapToMenuCategories = (
   menu: any[],
   restaurantId: string
 ): MenuCategory[] => {
-  return menu.map((menuItem) => ({
-    id: crypto.randomUUID(), // Generate a unique ID (or replace with actual ID if available)
-    restaurantId: restaurantId, // Use the provided restaurantId
-    name: menuItem.category, // Map the category field from each menu item
-  }));
+  const uniqueCategories = new Map<string, MenuCategory>();
+
+  menu.forEach((menuItem) => {
+    if (!uniqueCategories.has(menuItem.category)) {
+      uniqueCategories.set(menuItem.category, {
+        id: crypto.randomUUID(), // Generate a unique ID (or replace with actual ID if available)
+        restaurantId: restaurantId, // Use the provided restaurantId
+        name: menuItem.category, // Map the category field from each menu item
+      });
+    }
+  });
+
+  return Array.from(uniqueCategories.values());
 };
 
 export const mapToMenuItems = (
