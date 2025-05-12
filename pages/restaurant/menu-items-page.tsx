@@ -32,7 +32,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddMenuItemForm } from "../../components/restaurant/add-menu-item-form";
 import { toast } from "@/components/ui/use-toast";
-import { deleteMenuItem, updateMenuItem } from "@/lib/api/restaurantApi";
+import { updateMenuItem } from "@/lib/api/restaurantApi";
 import { useAuth } from "@/contexts/auth-context";
 import { getUserByCategoryAndId } from "@/lib/api/userApi";
 import { USER_CATEGORIES } from "@/constants/userConstants";
@@ -40,6 +40,24 @@ import {
   mapToMenuCategories,
   mapToMenuItems,
 } from "@/app/(customer)/restaurants/[id]/page";
+import {
+  deleteMenuItem,
+  getMenuItemByRestaurantId,
+} from "@/lib/api/menuItemApi";
+import { UpdateMenuItemForm } from "@/components/restaurant/update-menu-item-form";
+import { ToastAction } from "@/components/ui/toast";
+import { Alert } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function MenuItemsPage() {
   const { user } = useAuth();
@@ -47,85 +65,121 @@ export function MenuItemsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [menuRawData, setMenuRawData] = useState([]);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [isUpdateItemModalOpen, setIsUpdateItemModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [deleteTrigger, setDeleteTrigger] = useState(false);
+
+  // useEffect(() => {
+  //   const fetchRestaurantData = async () => {
+  //     try {
+  //       const data = await getUserByCategoryAndId(
+  //         USER_CATEGORIES.RESTAURANT,
+  //         user.identifier,
+  //         null
+  //       );
+  //       setMenuRawData(data.menu);
+  //       const menuCategories = mapToMenuCategories(data.menu, data.identifier);
+  //       const categoryIdMap = Object.fromEntries(
+  //         menuCategories.map((category) => [category.name, category.id])
+  //       );
+  //       setMenuItems(mapToMenuItems(data.menu, data.identifier, categoryIdMap));
+  //     } catch (error) {
+  //       console.error("Error fetching user data:", error);
+  //     }
+  //   };
+
+  //   if (user && `${user.role}s` === USER_CATEGORIES.RESTAURANT) {
+  //     fetchRestaurantData();
+  //   }
+  // }, [user]);
 
   useEffect(() => {
-    const fetchRestaurantData = async () => {
+    const fetchMenuItems = async () => {
       try {
-        const data = await getUserByCategoryAndId(
-          USER_CATEGORIES.RESTAURANT,
-          user.identifier,
-          null
-        );
-        setMenuRawData(data.menu);
-        const menuCategories = mapToMenuCategories(data.menu, data.identifier);
-        const categoryIdMap = Object.fromEntries(
-          menuCategories.map((category) => [category.name, category.id])
-        );
-        setMenuItems(mapToMenuItems(data.menu, data.identifier, categoryIdMap));
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+        const response: any = await getMenuItemByRestaurantId(user.refID._id);
+        if (response.data) {
+          setMenuItems(response.data);
+          // console.log(`driverOrders => `, response.data);
+        }
+      } catch (err: any) {
+        if (err.response) {
+          const { data } = err.response;
+
+          if (data && data.message) {
+            console.log(`MenuItem Details Fetching Failed: ${data.message}`);
+          } else {
+            console.log("An unexpected error occurred. Please try again.");
+          }
+        } else {
+          console.log(
+            "An unexpected error occurred. Please check your network and try again."
+          );
+        }
       }
     };
 
-    if (user && `${user.role}s` === USER_CATEGORIES.RESTAURANT) {
-      fetchRestaurantData();
-    }
-  }, [user]);
+    if (user.refID._id) fetchMenuItems();
+  }, [user.refID._id, isAddItemModalOpen, isUpdateItemModalOpen, deleteTrigger]);
 
   const handleAddItem = (newItem: any) => {
     setMenuItems([newItem, ...menuItems]);
   };
 
-  const handleDeleteItem = async (id: number) => {
-    setMenuItems(menuItems.filter((item) => item.id !== id));
-    const itemToDelete = menuItems.find((item) => item.id === id);
-    const itemToDeleteRaw = menuRawData.find(
-      (rawItem) => rawItem.name === itemToDelete.name
-    );
-    await deleteMenuItem({ menuId: itemToDeleteRaw.name, id: user.identifier });
-    toast({
-      title: "Menu item deleted",
-      description: "The menu item has been deleted successfully.",
-    });
+  // const handleDeleteItem = async (id: number) => {
+  //   setMenuItems(menuItems.filter((item) => item.id !== id));
+  //   const itemToDelete = menuItems.find((item) => item.id === id);
+  //   const itemToDeleteRaw = menuRawData.find(
+  //     (rawItem) => rawItem.name === itemToDelete.name
+  //   );
+  //   await deleteMenuItem({ menuId: itemToDeleteRaw.name, id: user.identifier });
+  //   toast({
+  //     title: "Menu item deleted",
+  //     description: "The menu item has been deleted successfully.",
+  //   });
+  // };
+
+  const handleUpdateItem = (updatedItem: any) => {
+    setSelectedItem(updatedItem);
+    setIsUpdateItemModalOpen(true);
   };
 
-  const handleToggleStatus = async (id: number) => {
-    setMenuItems(
-      menuItems.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: item.status === "active" ? "inactive" : "active",
-            }
-          : item
-      )
-    );
+  // const handleToggleStatus = async (id: string) => {
+  //   setMenuItems(
+  //     menuItems.map((item : any) =>
+  //       item._id === id
+  //         ? {
+  //             ...item,
+  //             status: item.status === "active" ? "inactive" : "active",
+  //           }
+  //         : item
+  //     )
+  //   );
 
-    const item = menuItems.find((item) => item.id === id);
-    const itemToUpdate = menuRawData.find(
-      (rawItem) => rawItem.name === item.name
-    );
-    console.log("itemToUpdate", itemToUpdate);
-    await updateMenuItem({
-      menu: {
-        name: itemToUpdate.name,
-        description: itemToUpdate.description,
-        price: itemToUpdate.price,
-        category: itemToUpdate.category,
-        image: itemToUpdate.image,
-        ingredients: itemToUpdate.ingredients,
-        dietaryRestrictions: itemToUpdate.dietaryRestrictions,
-        isAvailable: !itemToUpdate.isAvailable,
-      },
-      identifier: user.identifier,
-    });
-    const newStatus = item?.status === "active" ? "inactive" : "active";
-    toast({
-      title: "Status updated",
-      description: `${item?.name} is now ${newStatus}.`,
-    });
-  };
+  //   const item = menuItems.find((item) => item.id === id);
+  //   const itemToUpdate = menuRawData.find(
+  //     (rawItem) => rawItem.name === item.name
+  //   );
+  //   console.log("itemToUpdate", itemToUpdate);
+  //   await updateMenuItem({
+  //     menu: {
+  //       name: itemToUpdate.name,
+  //       description: itemToUpdate.description,
+  //       price: itemToUpdate.price,
+  //       category: itemToUpdate.category,
+  //       image: itemToUpdate.image,
+  //       ingredients: itemToUpdate.ingredients,
+  //       dietaryRestrictions: itemToUpdate.dietaryRestrictions,
+  //       isAvailable: !itemToUpdate.isAvailable,
+  //     },
+  //     identifier: user.identifier,
+  //   });
+  //   const newStatus = item?.status === "active" ? "inactive" : "active";
+  //   toast({
+  //     title: "Status updated",
+  //     description: `${item?.name} is now ${newStatus}.`,
+  //   });
+  // };
 
   useEffect(() => {
     if (searchQuery) {
@@ -142,6 +196,48 @@ export function MenuItemsPage() {
     if (selectedCategory === "all") return true;
     return item.category === selectedCategory;
   });
+
+  const handleDeleteItem = async (id: string) => {
+    try {
+      const response = await deleteMenuItem(id);
+      if (response) {
+        toast({
+          title: "Success",
+          description: `Menu item has been deleted successfully.`,
+          variant: "default",
+        });
+        setDeleteTrigger(!deleteTrigger);
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data && data.message) {
+          toast({
+            title: "Error",
+            description: `MenuItem deletion failed: ${data.message}`,
+            variant: "destructive",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "An unexpected error occurred. Please try again.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description:
+            "An unexpected error occurred. Please check your network and try again.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -248,12 +344,12 @@ export function MenuItemsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMenuItems.map((item) => (
-                  <TableRow key={item.id}>
+                {filteredMenuItems.map((item: any) => (
+                  <TableRow key={item._id}>
                     <TableCell>
                       <div className="h-12 w-12 rounded-md overflow-hidden">
                         <Image
-                          src={item.image || "/placeholder.svg"}
+                          src={item.imageUrl || "/placeholder.svg"}
                           alt={item.name}
                           width={50}
                           height={50}
@@ -270,26 +366,44 @@ export function MenuItemsPage() {
                       {item.description}
                     </TableCell>
                     <TableCell>
-                      <ItemStatus status={item.status} />
+                      <ItemStatus status={item.isAvailable} />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleToggleStatus(item.id)}
+                          onClick={() => handleUpdateItem(item)}
                         >
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteItem(item.id)}
-                        >
-                          <Trash className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger>
+                            <Trash className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </AlertDialogTrigger>
+
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you sure you want to Delete this item?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Once deleted, this item cannot be recovered.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteItem(item._id)}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -304,21 +418,26 @@ export function MenuItemsPage() {
         onOpenChange={setIsAddItemModalOpen}
         onAddItem={handleAddItem}
       />
+      <UpdateMenuItemForm
+        open={isUpdateItemModalOpen}
+        onOpenChange={setIsUpdateItemModalOpen}
+        selectedItem={selectedItem}
+      />
     </div>
   );
 }
 
-function ItemStatus({ status }: { status: string }) {
+function ItemStatus({ status }: { status: boolean }) {
   return (
     <Badge
       variant="outline"
       className={cn(
         "capitalize",
-        status === "active" && "border-emerald-500 text-emerald-500",
-        status === "inactive" && "border-slate-500 text-slate-500"
+        status === true && "border-emerald-500 text-emerald-500",
+        status === false && "border-slate-500 text-slate-500"
       )}
     >
-      {status}
+      {status ? "Available" : "Not Available"}
     </Badge>
   );
 }
