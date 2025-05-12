@@ -156,21 +156,21 @@ export default function Checkout() {
     }, 2000);
   };
 
-  if (cart.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <p className="text-gray-500 mb-8">
-            You need to add items to your cart before checkout.
-          </p>
-          <Link href="/restaurants">
-            <Button>Browse Restaurants</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // if (cart.length === 0) {
+  //   return (
+  //     <div className="container mx-auto px-4 py-8 max-w-4xl">
+  //       <div className="text-center py-12">
+  //         <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
+  //         <p className="text-gray-500 mb-8">
+  //           You need to add items to your cart before checkout.
+  //         </p>
+  //         <Link href="/restaurants">
+  //           <Button>Browse Restaurants</Button>
+  //         </Link>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
