@@ -1,3 +1,4 @@
+import ProtectedRoute from '@/components/ProtectedRoute';
 import './globals.css'
 
 export default function RootLayout({
@@ -6,9 +7,10 @@ export default function RootLayout({
     children: React.ReactNode
 }>) {
     return (
-        <html lang="en">
-            <body>{children}</body>
-        </html>
+        <ProtectedRoute allowedRoles={["Driver"]}>
+            {children}
+        </ProtectedRoute>
+        
     )
 }
 
