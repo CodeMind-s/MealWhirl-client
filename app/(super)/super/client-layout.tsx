@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SuperAdminSidebar } from "@/components/super/super-admin-sidebar"
+import { useAuth } from "@/contexts/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -43,6 +44,8 @@ export default function ClientLayout({
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  const { logout } = useAuth();
 
   return (
     <html lang="en">
@@ -89,7 +92,10 @@ export default function ClientLayout({
                           <DropdownMenuItem>Profile</DropdownMenuItem>
                           <DropdownMenuItem>Settings</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>Logout</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            logout();
+                            window.location.href = "/login";
+                          }}>Logout</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
