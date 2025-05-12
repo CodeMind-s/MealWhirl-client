@@ -31,6 +31,7 @@ type UserType = {
 
 type AuthContextType = {
   user: UserType | null;
+  isLoading: boolean;
   login: (data: { email: string; password: string }) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
@@ -40,20 +41,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     // Optional: Load user from cookies/localStorage
-    const storedUser = Cookies.get("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // const storedUser = Cookies.get("user");
+    // if (storedUser) {
+    //   setUser(JSON.parse(storedUser));
+    // }
+    const initializeAuth = async () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+          // Optionally verify token with backend here
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (data: { email: string; password: string }) => {
     const response: any = await Login(data);
     if (response) {
       setUser(response.user);
+      localStorage.setItem("user", JSON.stringify(response.user));
       Cookies.set("user", JSON.stringify(response));
       const token = response.token;
       localStorage.setItem("accessToken", token);
@@ -87,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
