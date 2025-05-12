@@ -4,11 +4,13 @@ import { AuthProvider } from "@/contexts/auth-context";
 
 export default function Home() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    // <ThemeProvider>
+      // <AuthProvider>
+      <>
+         <AppContent /> 
+      </>
+      // </AuthProvider>
+    // {/* </ThemeProvider> */}
   );
 }
 
