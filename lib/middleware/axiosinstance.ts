@@ -45,8 +45,8 @@ import { getToken } from './auth';
 import isTokenExpired from './jwt';
 
 const axiosInstance = axios.create({
-    // baseURL: process.env.NEXT_PUBLIC_API_URL,
-    baseURL: 'http://localhost:5001/mealwhirl_server/api/v1',
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    // baseURL: 'http://localhost:5001/mealwhirl_server/api/v1',
 });
 
 axiosInstance.interceptors.request.use(async (config: any) => {
