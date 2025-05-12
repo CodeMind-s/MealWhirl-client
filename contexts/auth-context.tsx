@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { User, UserRole } from "@/types/User";
-import axiosInstance from "@/lib/middleware/axioinstance";
+import axiosInstance from "@/lib/middleware/axiosinstance";
 import {
   getUserSession,
   removeUserSession,
