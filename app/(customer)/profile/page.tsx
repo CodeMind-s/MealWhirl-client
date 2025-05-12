@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { orders } from "@/lib/data"
+import { removeToken } from "@/lib/middleware/auth"
 
 export default function ProfilePage() {
   // Get recent orders (last 3)
@@ -75,6 +76,25 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
+          <br />
+          <Card>
+            <CardHeader>
+              <CardTitle>Logout</CardTitle>
+              <CardDescription>Click the button below to log out of your account.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => {
+                  removeToken()
+                  window.location.href = "/login"
+                }}
+              >
+                Logout
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="md:col-span-2">
@@ -165,9 +185,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
-
-                  <Separator />
-
                   <div className="space-y-2">
                     <h3 className="font-medium flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
