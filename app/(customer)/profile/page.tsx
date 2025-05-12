@@ -10,9 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { orders } from "@/lib/data"
-import { removeToken } from "@/lib/middleware/auth"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function ProfilePage() {
+  const { logout } = useAuth();
+
   // Get recent orders (last 3)
   const recentOrders = orders.slice(0, 3)
 
@@ -87,8 +89,8 @@ export default function ProfilePage() {
                 variant="destructive"
                 className="w-full"
                 onClick={() => {
-                  removeToken()
-                  window.location.href = "/login"
+                  logout();
+                  window.location.href = "/login";
                 }}
               >
                 Logout
