@@ -20,7 +20,7 @@ interface CartItem {
   price: number
   quantity: number
   totalItemPrice: number
-  image?: string
+  imageUrl?: string
 }
 
 export default function CartPage() {
@@ -31,7 +31,7 @@ export default function CartPage() {
   const [cartId, setCartId] = useState<string >("")
 
   // Assume userId is available (e.g., from auth context)
-  const userId = "user02" // Replace with actual user ID from auth context or prop
+  const userId = "681e1d49795a0151b8d44ba7" // Replace with actual user ID from auth context or prop
 
   // Fetch cart on mount
   useEffect(() => {
@@ -267,7 +267,7 @@ export default function CartPage() {
                   >
                     <div className="relative h-20 w-20 flex-shrink-0 rounded-md overflow-hidden">
                       <Image
-                        src={"https://th.bing.com/th/id/R.74b40808d917ba9e3d8228daf9c7f04b?rik=mKfVsnIBmInePQ&pid=ImgRaw&r=0"}
+                        src={item.imageUrl || "/placeholder.png"}
                         alt={item.name}
                         fill
                         className="object-cover"
