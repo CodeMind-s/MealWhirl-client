@@ -1,6 +1,6 @@
 import { USER_ACCOUNT_STATUS } from "@/constants/userConstants";
 import { restaurants } from "../data";
-import axiosInstance from "../middleware/axioinstance";
+import axiosInstance from "../middleware/axiosinstance";
 
 export const createUpdateResaurant = async (userData: Record<string, any>, status: string) => {
   const { identifier, ...rest } = userData;
