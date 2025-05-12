@@ -1,22 +1,22 @@
 import { api } from "../middleware/api";
 
-export async function Login(data:{ email: string; password: string }) {
+export async function Login(data: { email: string; password: string }) {
   try {
-      const response = await api.post(`/auth/login`, data)
-      return response.data;
+    const response = await api.post(`/auth/login`, data);
+    return response.data;
   } catch (error) {
-      console.log('Login failed:');
-      throw error;
+    console.log("Login failed:");
+    throw error;
   }
 }
 
 export async function signUp(data: any) {
   try {
-      const response = await api.post(`/auth/register`,data)
-      return response.data;
+    const response = await api.post(`/auth/register`, data);
+    return response.data;
   } catch (error) {
-      console.log('Login failed:');
-      throw error;
+    console.log("Login failed:");
+    throw error;
   }
 }
 
@@ -30,7 +30,6 @@ export async function signUp(data: any) {
 //   }
 // }
 
-
 // export async function verifyUserEmail(token: string) {
 //   try {
 //       const response = await api.get(`/auth/verify-email/${token}`)
@@ -40,7 +39,6 @@ export async function signUp(data: any) {
 //       throw error;
 //   }
 // }
-
 
 // export async function providerRegistration(userdata: any) {
 //   try {
