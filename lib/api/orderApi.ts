@@ -1,4 +1,4 @@
-import axiosInstance from "../middleware/axioinstance";
+import axiosInstance from "../middleware/axiosinstance";
 
 interface DeliveryAddress {
   latitude: number;
@@ -43,7 +43,7 @@ interface AssignDeliveryPersonDto {
 
 export const createNewOrder = async (data: Order) => {
   try {
-    const response = await axiosInstance.post(`/api/v1/orders`, data);
+    const response = await axiosInstance.post(`/orders`, data);
     return response;
   } catch (error) {
     console.log("Error while creating order:", error);
@@ -53,7 +53,7 @@ export const createNewOrder = async (data: Order) => {
 
 export const getAllOrders = async () => {
   try {
-    const response = await axiosInstance.get(`/api/v1/orders`);
+    const response = await axiosInstance.get(`/orders`);
     return response;
   } catch (error) {
     console.log("Error while fetchin orders:", error);
@@ -64,7 +64,7 @@ export const getAllOrders = async () => {
 export const getOrdersByDeliveryPersonId = async (driverId: string) => {
   try {
     const response = await axiosInstance.get(
-      `/api/v1/orders/delivery/${driverId}`
+      `/orders/delivery/${driverId}`
     );
     return response;
   } catch (error) {
@@ -75,7 +75,7 @@ export const getOrdersByDeliveryPersonId = async (driverId: string) => {
 
 export const getOrdersByUserId = async (userId: string) => {
   try {
-    const response = await axiosInstance.get(`/api/v1/orders/user/${userId}`);
+    const response = await axiosInstance.get(`/orders/user/${userId}`);
     return response;
   } catch (error) {
     console.log("Error while fetchin user orders:", error);
@@ -86,7 +86,7 @@ export const getOrdersByUserId = async (userId: string) => {
 export const getOrdersByRestaurantId = async (restaurantId: string) => {
   try {
     const response = await axiosInstance.get(
-      `/api/v1/orders/restaurant/${restaurantId}`
+      `/orders/restaurant/${restaurantId}`
     );
     return response;
   } catch (error) {
@@ -97,7 +97,7 @@ export const getOrdersByRestaurantId = async (restaurantId: string) => {
 
 export const getOrderById = async (orderId: string) => {
   try {
-    const response = await axiosInstance.get(`/api/v1/orders/${orderId}`);
+    const response = await axiosInstance.get(`/orders/${orderId}`);
     return response;
   } catch (error) {
     console.log("Error while fetchin restaurant orders:", error);
@@ -111,7 +111,7 @@ export const updateOrderStatus = async (
 ) => {
   try {
     const response = await axiosInstance.patch(
-      `/api/v1/orders/${orderId}`,
+      `/orders/${orderId}`,
       data
     );
     return response;
@@ -127,7 +127,7 @@ export const assignDeliveryPerson = async (
 ) => {
   try {
     const response = await axiosInstance.patch(
-      `/api/v1/orders/delivery/${orderId}`,
+      `/orders/delivery/${orderId}`,
       data
     );
     return response;
@@ -139,7 +139,7 @@ export const assignDeliveryPerson = async (
 
 export const deleteOrder = async (orderId: string) => {
   try {
-    const response = await axiosInstance.delete(`/api/v1/orders/${orderId}`);
+    const response = await axiosInstance.delete(`/orders/${orderId}`);
     return response;
   } catch (error) {
     console.log("Error while deleting order:", error);
