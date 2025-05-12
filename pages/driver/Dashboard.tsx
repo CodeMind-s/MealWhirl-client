@@ -18,12 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OrdersProvider, useOrders } from "@/contexts/orders-context";
-import { useAuth } from "@/contexts/auth-context";
 import { logout } from "@/lib/actions";
 import { getUserFromCookie } from "@/lib/auth";
 import { getAllOrders, getOrdersByDeliveryPersonId } from "@/lib/api/orderApi";
 import { useToast } from "@/hooks/use-toast";
 import notifySound from "@/assets/audio/notify.mp3";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Dashboard() {
   return (
@@ -34,23 +34,29 @@ export default function Dashboard() {
 }
 
 function DashboardContent() {
-  const { logout } = useAuth();
   const { orders } = useOrders();
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null);
   const [deliveryPersonId, setDeliveryPersonId] = useState<string>(
-    "67fbb71ad2df7230c45110we"
+    ""
   );
   const [todayOrders, setTodayOrders] = useState<any>([]);
   const [pendingOrders, setPendingOrders] = useState<any>([]);
   const [inProgressOrders, setInProgressOrders] = useState<any>([]);
   const [completedOrders, setCompletedOrders] = useState<any>([]);
-
   const [driverOrders, setDriverOrders] = useState<any>([]);
 
   // Add a state to track if audio is enabled
   const [audioEnabled, setAudioEnabled] = useState(false);
+
+    // const [userId, setUserId] = useState<string>("");
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setDeliveryPersonId(user?._id);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
