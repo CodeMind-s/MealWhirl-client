@@ -2,7 +2,7 @@ import { api } from "../middleware/api";
 
 export async function Login(data:{ email: string; password: string }) {
   try {
-      const response = await api.post(`http://localhost:5001/mealwhirl_server/api/v1/auth/login`, data)
+      const response = await api.post(`/auth/login`, data)
       return response.data;
   } catch (error) {
       console.log('Login failed:');
