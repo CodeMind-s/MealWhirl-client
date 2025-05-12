@@ -9,16 +9,19 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <AuthProvider>
+    <ProtectedRoute allowedRoles={["Restaurant"]}>
+      {/* <AuthProvider> */}
         <ClientLayout>{children}</ClientLayout>
-      </AuthProvider>
+      {/* </AuthProvider> */}
       <Toaster />
+    </ProtectedRoute>
     </>
   );
 }
 
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export const metadata = {
   title: "MealWhirl - Restaurant",
