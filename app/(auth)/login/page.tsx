@@ -1,68 +1,115 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
+import type React from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+// import { useAuth } from "@/contexts/auth-context"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Login } from "@/lib/api/authentication";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { user, login } = useAuth()
-  const router = useRouter()
-  const { toast } = useToast()
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const result = await login(email, password)
+      const data = {
+        email: email,
+        password: password,
+      };
+      const result: any = await Login(data);
 
-      if (!result.success) {
+      if (result) {
+        const token = result.token;
+        localStorage.setItem("accessToken", token);
         toast({
-          title: "Error",
-          description: result.error || "Invalid credentials",
-          variant: "destructive",
-        })
-        setIsLoading(false)
-        return
+          title: "Success",
+          description: "You have been logged in successfully.",
+        });
+
+        if (result.user.isAdmin) {
+          router.push("/admin");
+        }
+
+        if (result.user.type === "Customer") {
+          router.push("/");
+        } else if (result.user.type === "Driver") {
+          router.push("/driver");
+        } else if (result.user.type === "Restaurant") {
+          router.push("/restaurant");
+        } else {
+          router.push("/login");
+        }
       }
-
-      toast({
-        title: "Success",
-        description: "You have been logged in successfully.",
-      })
-
     } catch (error) {
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
-      })
-      setIsLoading(false)
+      });
+      setIsLoading(false);
     }
-  }
+  };
+
+  // async function handleSubmit(e: React.FormEvent) {
+  //   e.preventDefault()
+  //   setIsLoading(true)
+
+  //   try {
+  //     const result = await login(email, password)
+
+  //     if (!result.success) {
+  //       toast({
+  //         title: "Error",
+  //         description: result.error || "Invalid credentials",
+  //         variant: "destructive",
+  //       })
+  //       setIsLoading(false)
+  //       return
+  //     }
+
+  //     toast({
+  //       title: "Success",
+  //       description: "You have been logged in successfully.",
+  //     })
+
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Something went wrong. Please try again.",
+  //       variant: "destructive",
+  //     })
+  //     setIsLoading(false)
+  //   }
+  // }
 
   return (
     <div className="min-h-screen pattern-bg flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
           <div className="px-8 py-6">
             <div className="text- mb-8">
-              <h1 className="text-3xl font-bold primary-text mb-2">Welcome To MealWhirl</h1>
+              <h1 className="text-3xl font-bold primary-text mb-2">
+                Welcome To MealWhirl
+              </h1>
               <p className="text-gray-600">Sign in to access your account</p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Email address
                 </Label>
                 <div className="mt-1">
@@ -82,7 +129,10 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <Label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password
                 </Label>
                 <div className="mt-1">
@@ -112,14 +162,19 @@ export default function LoginPage() {
 
               <div className="text-center text-sm">
                 Don't have an account?{" "}
-                <Link href="/register" className="font-medium text-brand-blue hover:text-brand-blue-dark">
+                <Link
+                  href="/register"
+                  className="font-medium text-brand-blue hover:text-brand-blue-dark"
+                >
                   Sign up
                 </Link>
               </div>
 
               <div className="space-y-2">
                 <details className="text-sm text-muted-foreground">
-                  <summary className="cursor-pointer">Available test accounts</summary>
+                  <summary className="cursor-pointer">
+                    Available test accounts
+                  </summary>
                   <div className="mt-2 space-y-2 rounded-md bg-muted p-3">
                     <p>
                       <strong>Customer:</strong> cust.test@mail.com / cust123
@@ -141,5 +196,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
