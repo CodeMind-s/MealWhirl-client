@@ -4,19 +4,18 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Login } from "@/lib/api/authentication";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const router = useRouter();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,30 +26,11 @@ export default function LoginPage() {
         email: email,
         password: password,
       };
-      const result: any = await Login(data);
-
-      if (result) {
-        const token = result.token;
-        localStorage.setItem("accessToken", token);
-        toast({
-          title: "Success",
-          description: "You have been logged in successfully.",
-        });
-
-        if (result.user.isAdmin) {
-          router.push("/admin");
-        }
-
-        if (result.user.type === "Customer") {
-          router.push("/");
-        } else if (result.user.type === "Driver") {
-          router.push("/driver");
-        } else if (result.user.type === "Restaurant") {
-          router.push("/restaurant");
-        } else {
-          router.push("/login");
-        }
-      }
+      await login(data);
+      toast({
+        title: "Success",
+        description: "You have been logged in successfully.",
+      });
     } catch (error) {
       toast({
         title: "Error",
