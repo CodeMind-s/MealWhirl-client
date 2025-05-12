@@ -1,5 +1,4 @@
-import { AxiosResponse } from "axios";
-import axiosInstance from "../middleware/axioinstance";
+import axiosInstance from "../middleware/axiosinstance";
 
 interface Notification {
   userId: string;
@@ -33,7 +32,7 @@ interface EmailNotification {
 
 export const createNewNotification = async (
   data: Notification
-): Promise<AxiosResponse> => {
+) => {
   try {
     const response = await axiosInstance.post(`/notifications`, data);
     return response;
@@ -45,7 +44,7 @@ export const createNewNotification = async (
 
 export const sendSMSNotification = async (
   data: SMSNotification
-): Promise<AxiosResponse> => {
+) => {
   try {
     const response = await axiosInstance.post(`/notifications/sms`, data);
     return response;
@@ -57,7 +56,7 @@ export const sendSMSNotification = async (
 
 export const sendEmailNotification = async (
   data: EmailNotification
-): Promise<AxiosResponse> => {
+) => {
   try {
     const response = await axiosInstance.post(`/notifications/email`, data);
     return response;
