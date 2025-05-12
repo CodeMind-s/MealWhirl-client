@@ -1,4 +1,4 @@
-import axiosInstance from "../middleware/axioinstance";
+import axiosInstance from "../middleware/axiosinstance";
 
 interface CartItem {
   menuItemId: string;
@@ -38,7 +38,7 @@ interface SetActiveRestaurantDto {
 
 export const getAllCarts = async () => {
   try {
-    const response = await axiosInstance.get(`/api/v1/carts`);
+    const response = await axiosInstance.get(`/carts`);
     return response;
   } catch (error) {
     console.log("Error while fetching carts:", error);
@@ -48,7 +48,7 @@ export const getAllCarts = async () => {
 
 export const getCartById = async (cartId: string) => {
   try {
-    const response = await axiosInstance.get(`/api/v1/carts/${cartId}`);
+    const response = await axiosInstance.get(`/carts/${cartId}`);
     return response;
   } catch (error) {
     console.log("Error while fetching cart:", error);
@@ -58,7 +58,7 @@ export const getCartById = async (cartId: string) => {
 
 export const getCartByUserId = async (userId: string) => {
   try {
-    const response = await axiosInstance.get(`/api/v1/carts/user/${userId}`);
+    const response = await axiosInstance.get(`/carts/user/${userId}`);
     return response;
   } catch (error) {
     console.log("Error while fetching user cart:", error);
@@ -68,7 +68,7 @@ export const getCartByUserId = async (userId: string) => {
 
 export const addToCart = async (data: AddToCartDto) => {
   try {
-    const response = await axiosInstance.post(`/api/v1/carts/add`, data);
+    const response = await axiosInstance.post(`/carts/add`, data);
     return response;
   } catch (error) {
     console.log("Error while adding item to cart:", error);
@@ -78,7 +78,7 @@ export const addToCart = async (data: AddToCartDto) => {
 
 export const updateCartItem = async (data: UpdateCartItemDto) => {
   try {
-    const response = await axiosInstance.patch(`/api/v1/carts/${data.cartId}`, data.updates);
+    const response = await axiosInstance.patch(`/carts/${data.cartId}`, data.updates);
     return response;
   } catch (error) {
     console.log("Error while updating cart item:", error);
@@ -88,7 +88,7 @@ export const updateCartItem = async (data: UpdateCartItemDto) => {
 
 export const removeItemFromCart = async (data: RemoveItemFromCartDto) => {
   try {
-    const response = await axiosInstance.patch(`/api/v1/carts/items/${data.cartId}`, data.updates);
+    const response = await axiosInstance.patch(`/carts/items/${data.cartId}`, data.updates);
     return response;
   } catch (error) {
     console.log("Error while removing item from cart:", error);
@@ -98,7 +98,7 @@ export const removeItemFromCart = async (data: RemoveItemFromCartDto) => {
 
 export const deleteCart = async (cartId: string) => {
   try {
-    const response = await axiosInstance.delete(`/api/v1/carts/${cartId}`);
+    const response = await axiosInstance.delete(`/carts/${cartId}`);
     return response;
   } catch (error) {
     console.log("Error while deleting cart:", error);
@@ -108,7 +108,7 @@ export const deleteCart = async (cartId: string) => {
 
 export const setActiveRestaurant = async (data: SetActiveRestaurantDto) => {
   try {
-    const response = await axiosInstance.patch(`/api/v1/carts/active-restaurant`, data);
+    const response = await axiosInstance.patch(`/carts/active-restaurant`, data);
     return response;
   } catch (error) {
     console.log("Error while setting active restaurant:", error);
