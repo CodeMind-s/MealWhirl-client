@@ -1,4 +1,4 @@
-import axiosInstance from "../middleware/axioinstance";
+import axiosInstance from "../middleware/axiosinstance";
 
 // Define the return type
 interface ApiResponse<T> {
