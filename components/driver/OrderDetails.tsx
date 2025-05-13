@@ -373,6 +373,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
                 longitude={Longitude}
                 restLatitude={restLatitude}
                 restLongitude={restLongitude}
+                orderId={orderId}
               />
             </CardContent>
           </Card>
