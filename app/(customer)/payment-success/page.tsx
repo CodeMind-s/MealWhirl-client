@@ -1,9 +1,14 @@
-'use client'
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
+import { createNewOrder } from "@/lib/api/orderApi";
+import { createNewTransaction } from "@/lib/api/paymentApi";
 import { CircleCheckIcon } from "lucide-react";
 import Link from "next/link";
+import { use, useEffect, useState } from "react";
 
 export default function PaymentSuccess({
   searchParams: { amount, payment_intent, redirect_status },
@@ -14,58 +19,107 @@ export default function PaymentSuccess({
     redirect_status: string;
   };
 }) {
-  // const { placedOder, setPaymentId } = usePlacedOrder();
-  // const { toast } = useToast();
+  const [order, setOrder] = useState<any>();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    const storedOrder = localStorage.getItem("order");
+    if (storedOrder) {
+      const parsedOrder = JSON.parse(storedOrder);
+      setOrder(parsedOrder);
+    }
+  }, []);
 
-  // useEffect(() => {
-  //   if (payment_intent && placedOder && redirect_status == "succeeded") {
-  //     setPaymentId(payment_intent);
-  //     handleCreateOrder(placedOder);
-  //   }
-  // }, [placedOder, payment_intent, setPaymentId]);
+  useEffect(() => {
+    if (payment_intent && order && redirect_status == "succeeded") {
+      handleCreateOrder();
+    }
+  }, [order, payment_intent, redirect_status]);
 
-  // console.log("placedOder", placedOder);
 
-  // const handleCreateOrder = async (order: any) => {
-  //   try {
-  //     const response = await createNewOrder(order);
-  //     if (response) {
-  //       toast({
-  //         title: "Success",
-  //         description: "Order created successfully!",
-  //         variant: "default",
-  //       });
-  //     }
-  //   } catch (error: any) {
-  //     if (error.response) {
-  //       const { data } = error.response;
+  const handleCreateOrder = async () => {
+    try {
+      const paymentData: any = {
+        userId: order.userId,
+        totalAmount: order.totalAmount,
+        deliveryFee: order.deliveryFee,
+        paymentMethod: "CARD",
+        paymentStatus: "PENDING",
+        paymentGatewayTransactionId: "",
+        description: "Payment for Food Order",
+      };
 
-  //       if (data && data.message) {
-  //         toast({
-  //           title: "Error",
-  //           description: `Order creation failed: ${data.message}`,
-  //           variant: "destructive",
-  //           action: <ToastAction altText="Try again">Try again</ToastAction>,
-  //         });
-  //       } else {
-  //         toast({
-  //           variant: "destructive",
-  //           title: "Uh oh! Something went wrong.",
-  //           description: "An unexpected error occurred. Please try again.",
-  //           action: <ToastAction altText="Try again">Try again</ToastAction>,
-  //         });
-  //       }
-  //     } else {
-  //       toast({
-  //         variant: "destructive",
-  //         title: "Uh oh! Something went wrong.",
-  //         description:
-  //           "An unexpected error occurred. Please check your network and try again.",
-  //         action: <ToastAction altText="Try again">Try again</ToastAction>,
-  //       });
-  //     }
-  //   }
-  // };
+      const paymentResponse: any = await createNewTransaction(paymentData);
+      if (paymentResponse) {
+        toast({
+          title: "Success",
+          description: "Payment created successfully!",
+          variant: "default",
+        });
+
+        const data: any = {
+          userId: order.userId,
+          restaurantId: order.restaurantId,
+          items: order.items.map((item: any) => ({
+            itemName: item.itemName,
+            quentity: item.quentity.toString(),
+            total: item.total.toString(),
+            imageUrl: item.imageUrl,
+          })),
+          deliveryAddress: {
+            address: order.deliveryAddress.address,
+            latitude: order.deliveryAddress.latitude,
+            longitude: order.deliveryAddress.longitude,
+          },
+          paymentId: paymentResponse.data._id,
+          paymentMethod: "CARD",
+          totalAmount: order.totalAmount,
+          deliveryFee: order.deliveryFee,
+          distance: order.distance,
+          duration: order.duration,
+          fare: order.fare,
+          specialInstructions: order.specialInstructions,
+        };
+
+        const response = await createNewOrder(data);
+        if (response) {
+          toast({
+            title: "Success",
+            description: "Order created successfully!",
+            variant: "default",
+          });
+        }
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data && data.message) {
+          toast({
+            title: "Error",
+            description: `Order creation failed: ${data.message}`,
+            variant: "destructive",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "An unexpected error occurred. Please try again.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description:
+            "An unexpected error occurred. Please check your network and try again.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
+    }
+  };
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-5xl">
