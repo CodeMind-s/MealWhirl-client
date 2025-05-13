@@ -359,7 +359,7 @@ export default function OrderDetailPage({
                     <div key={index} className="flex gap-4">
                       <div className="relative h-16 w-16 flex-shrink-0 rounded-md overflow-hidden">
                         <Image
-                          src="/placeholder.svg?height=64&width=64"
+                          src={item.imageUrl || "/placeholder.svg?height=64&width=64"}
                           alt={item.itemName}
                           fill
                           className="object-cover"
@@ -493,7 +493,7 @@ export default function OrderDetailPage({
 
               <div className="space-y-2">
                 <h4 className="font-medium">Payment Status</h4>
-                <Badge variant="default">Paid</Badge>
+                <Badge variant="default">{orderDetails.paymentMethod === 'CASH' ? 'Pending' : 'Paid'}</Badge>
               </div>
             </CardContent>
           </Card>
