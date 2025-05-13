@@ -7,8 +7,83 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import RestaurantCard from "@/components/restaurant-card"
 import { restaurants } from "@/lib/data"
+import { getAllRestaurants } from "@/lib/api/userApi";
+import { use, useEffect, useState } from "react"
+
+interface Restaurant {
+  id: string;
+  name: string;
+  description: string;
+  cuisineType: string;
+  rating: number;
+  imageUrl: string;
+  email: string;
+  phone: string;
+  type: string;
+  isAdmin: boolean;
+  reviewCount: number;
+  deliveryTime: number;
+  deliveryFee: number;
+  distance: string;
+  isOpen: boolean;
+  refID: {
+    address: {
+      street: string;
+      latitude: number;
+      longitude: number;
+    };
+    id: string;
+    name: string;
+    __v: number;
+  };
+  createdAt: string;
+  __v: number;
+}
 
 export default function Home() {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const fetchRestaurants = async () => {
+    try {
+      const data = await getAllRestaurants();
+      const transformedData = (data as any[]).map((restaurant) => ({
+        id: restaurant._id || "default-id", // Default id
+        name: restaurant.refID?.name || "Default Restaurant", // Default name
+        description: "No description available",
+        cuisineType: "Various",
+        rating: 0,
+        imageUrl: "/default-restaurant.jpg", // Default image
+        email: restaurant.email || "dummyemail@example.com",
+        phone: restaurant.phone || "0000000000",
+        type: restaurant.type || "Restaurant",
+        isAdmin: restaurant.isAdmin || false,
+        reviewCount: 0,
+        deliveryTime: 30,
+        deliveryFee: 0,
+        distance: "2 km",
+        isOpen: true,
+        refID: restaurant.refID || {
+          address: {
+            street: "123 Main St",
+            latitude: 40.7128,
+            longitude: -74.006,
+          },
+          id: "default-ref-id",
+          name: "Default Ref Name",
+          __v: 0,
+        },
+        createdAt: restaurant.createdAt || new Date().toISOString(),
+        __v: restaurant.__v || 0,
+      }));
+      setRestaurants(transformedData);
+    } catch (error) {
+      console.error("Error fetching restaurants:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
 
   return (
     <div>
