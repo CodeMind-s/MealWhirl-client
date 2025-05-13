@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronDown, Edit, Filter, Plus, Search, Trash } from "lucide-react";
 
@@ -58,17 +58,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { set } from "date-fns";
 
 export function MenuItemsPage() {
   const { user } = useAuth();
   const [menuItems, setMenuItems] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [menuRawData, setMenuRawData] = useState([]);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [isUpdateItemModalOpen, setIsUpdateItemModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [deleteTrigger, setDeleteTrigger] = useState(false);
+  const [filteredMenuItems, setFilteredMenuItems] = useState([]);
 
   // useEffect(() => {
   //   const fetchRestaurantData = async () => {
@@ -97,6 +99,7 @@ export function MenuItemsPage() {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
+        if (!user || !user.refID || !user.refID._id) return;
         const response: any = await getMenuItemByRestaurantId(user.refID._id);
         if (response.data) {
           setMenuItems(response.data);
@@ -119,12 +122,12 @@ export function MenuItemsPage() {
       }
     };
 
-    if (user.refID._id) fetchMenuItems();
-  }, [user.refID._id, isAddItemModalOpen, isUpdateItemModalOpen, deleteTrigger]);
+    if (user) fetchMenuItems();
+  }, [user, isAddItemModalOpen, isUpdateItemModalOpen, deleteTrigger]);
 
-  const handleAddItem = (newItem: any) => {
-    setMenuItems([newItem, ...menuItems]);
-  };
+  // const handleAddItem = (newItem: any) => {
+  //   setMenuItems([newItem, ...menuItems]);
+  // };
 
   // const handleDeleteItem = async (id: number) => {
   //   setMenuItems(menuItems.filter((item) => item.id !== id));
@@ -183,7 +186,7 @@ export function MenuItemsPage() {
 
   useEffect(() => {
     if (searchQuery) {
-      const filteredItems = menuItems.filter((item) =>
+      const filteredItems = menuItems.filter((item: any) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setMenuItems(filteredItems);
@@ -192,10 +195,16 @@ export function MenuItemsPage() {
     }
   }, [searchQuery, menuRawData]);
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (selectedCategory === "all") return true;
-    return item.category === selectedCategory;
-  });
+  useEffect(() => {
+    if (selectedCategory === "ALL") {
+      setFilteredMenuItems(menuItems);
+      return;
+    } else {
+      setFilteredMenuItems(
+        menuItems.filter((item: any) => item.category === selectedCategory)
+      );
+    }
+  }, [selectedCategory, menuItems]);
 
   const handleDeleteItem = async (id: string) => {
     try {
@@ -256,13 +265,14 @@ export function MenuItemsPage() {
             onValueChange={setSelectedCategory}
           >
             <TabsList>
-              <TabsTrigger value="all">All Items</TabsTrigger>
-              <TabsTrigger value="Main Course">Main Course</TabsTrigger>
-              <TabsTrigger value="Appetizer">Appetizers</TabsTrigger>
-              <TabsTrigger value="Dessert">Desserts</TabsTrigger>
-              <TabsTrigger value="Beverage">Beverages</TabsTrigger>
-              <TabsTrigger value="Fast Food">Fast Food</TabsTrigger>
-              <TabsTrigger value="Side">Side</TabsTrigger>
+              <TabsTrigger value="ALL">All Items</TabsTrigger>
+              <TabsTrigger value="MAIN_COURSE">Main Course</TabsTrigger>
+              <TabsTrigger value="APPETIZER">Appetizers</TabsTrigger>
+              <TabsTrigger value="DESSERT">Desserts</TabsTrigger>
+              <TabsTrigger value="BEVERAGE">Beverages</TabsTrigger>
+              <TabsTrigger value="FAST_FOOD">Fast Food</TabsTrigger>
+              <TabsTrigger value="SIDE">Side</TabsTrigger>
+              <TabsTrigger value="OTHER">Other</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -304,9 +314,9 @@ export function MenuItemsPage() {
                 <DropdownMenuLabel>Status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuCheckboxItem checked>
-                  Active
+                  Available
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Inactive</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>Not Available</DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
@@ -416,7 +426,7 @@ export function MenuItemsPage() {
       <AddMenuItemForm
         open={isAddItemModalOpen}
         onOpenChange={setIsAddItemModalOpen}
-        onAddItem={handleAddItem}
+        // onAddItem={handleAddItem}
       />
       <UpdateMenuItemForm
         open={isUpdateItemModalOpen}
