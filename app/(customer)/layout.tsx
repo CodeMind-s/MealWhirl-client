@@ -7,6 +7,7 @@ import Footer from "@/components/footer";
 import "./globals.css";
 import { PlacedOrderProvider } from "@/contexts/placed-order-context";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { OrdersProvider } from "@/contexts/orders-context";
 
 export default function RootLayout({
   children,
@@ -15,9 +16,9 @@ export default function RootLayout({
 }) {
   return (
     // <html lang="en">
-      // <body className="min-h-screen flex flex-col">
-      <>
-      <ProtectedRoute allowedRoles={["Customer"]}>
+    // <body className="min-h-screen flex flex-col">
+    <>
+      {/* <ProtectedRoute allowedRoles={["Customer"]}> */}
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -26,16 +27,18 @@ export default function RootLayout({
         >
           <PlacedOrderProvider>
             <CartProvider>
-              <MainNav />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <Toaster />
+              <OrdersProvider>
+                <MainNav />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <Toaster />
+              </OrdersProvider>
             </CartProvider>
           </PlacedOrderProvider>
         </ThemeProvider>
-      </ProtectedRoute>
-      </>
-      // </body>
+      {/* </ProtectedRoute> */}
+    </>
+    // </body>
     // </html>
   );
 }
