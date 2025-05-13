@@ -32,13 +32,15 @@ export interface MenuCategory {
 }
 
 export interface CartItem {
-  id: string;
+  id: string; 
+  restaurantId: string;
+  restaurantName: string; 
+  menuItemId: string;
   name: string;
   price: number;
   quantity: number;
-  restaurantId: string;
-  restaurantName: string;
-  image?: string;
+  totalItemPrice: number;
+  imageUrl?: string;
 }
 
 export interface Order {
