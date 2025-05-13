@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
+import socket from "@/lib/middleware/socket";
 
 // Custom bike icon for user location
 const bikeIcon = new L.Icon({
@@ -93,6 +94,18 @@ export default function Map({
         }
       );
     }
+  }, []);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      socket.emit("location_update", {
+        latitude: 12.3456,
+        longitude: 98.7654,
+        timestamp: Date.now(),
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Update route and markers when location changes

@@ -25,12 +25,16 @@ import { getOrderById } from "@/lib/api/orderApi";
 import { promises } from "dns";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
+import socket from "@/lib/middleware/socket";
 
 // Dynamically import Map with SSR disabled
-const DriverMap = dynamic(() => import("../../../../../components/driver/DriverMap"), {
-  ssr: false,
-  loading: () => <p>Loading map...</p>,
-});
+const DriverMap = dynamic(
+  () => import("../../../../../components/driver/DriverMap"),
+  {
+    ssr: false,
+    loading: () => <p>Loading map...</p>,
+  }
+);
 
 interface DeliveryAddress {
   latitude: number;
@@ -91,6 +95,7 @@ export default function OrderDetailPage({
   const [Longitude, setLongitude] = useState<number>(80.985924);
   const [restLatitude, setRestLatitude] = useState<number>(6.92254243510281);
   const [restLongitude, setRestLongitude] = useState<number>(79.91822361239088);
+  const [liveLocation, setLiveLocation] = useState<any>(null);
 
   useEffect(() => {
     const unwrapParams = async () => {
@@ -123,6 +128,18 @@ export default function OrderDetailPage({
 
     if (orderId) fetchOrderDetails();
   }, [orderId]);
+
+  useEffect(() => {
+    socket.on("location_update", (data) => {
+      if (data) {
+        setLiveLocation(data);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+            console.log("Live Location Data:", liveLocation);
+  },  [liveLocation]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -359,7 +376,10 @@ export default function OrderDetailPage({
                     <div key={index} className="flex gap-4">
                       <div className="relative h-16 w-16 flex-shrink-0 rounded-md overflow-hidden">
                         <Image
-                          src={item.imageUrl || "/placeholder.svg?height=64&width=64"}
+                          src={
+                            item.imageUrl ||
+                            "/placeholder.svg?height=64&width=64"
+                          }
                           alt={item.itemName}
                           fill
                           className="object-cover"
@@ -493,7 +513,9 @@ export default function OrderDetailPage({
 
               <div className="space-y-2">
                 <h4 className="font-medium">Payment Status</h4>
-                <Badge variant="default">{orderDetails.paymentMethod === 'CASH' ? 'Pending' : 'Paid'}</Badge>
+                <Badge variant="default">
+                  {orderDetails.paymentMethod === "CASH" ? "Pending" : "Paid"}
+                </Badge>
               </div>
             </CardContent>
           </Card>
