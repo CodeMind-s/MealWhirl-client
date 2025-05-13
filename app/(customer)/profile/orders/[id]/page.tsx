@@ -25,7 +25,7 @@ import { getOrderById } from "@/lib/api/orderApi";
 import { promises } from "dns";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import socket from "@/lib/middleware/socket";
+// import socket from "@/lib/middleware/socket";
 
 // Dynamically import Map with SSR disabled
 const DriverMap = dynamic(
@@ -91,11 +91,12 @@ export default function OrderDetailPage({
   const [error, setError] = useState<string | null>(null);
 
   // Define the coordinates for the map
+  const [deliveryLocation, setDeliveryLocation] = useState<any>(null);
   const [Latitude, setLatitude] = useState<number>(6.952216);
   const [Longitude, setLongitude] = useState<number>(80.985924);
   const [restLatitude, setRestLatitude] = useState<number>(6.92254243510281);
   const [restLongitude, setRestLongitude] = useState<number>(79.91822361239088);
-  const [liveLocation, setLiveLocation] = useState<any>(null);
+  const [driverLiveLocation, setDriverLiveLocation] = useState<any>(null);
 
   useEffect(() => {
     const unwrapParams = async () => {
@@ -112,8 +113,9 @@ export default function OrderDetailPage({
         const response: any = await getOrderById(orderId);
         if (response.data) {
           setOrderDetails(response.data);
-          setLatitude(response.data.deliveryAddress.latitude);
-          setLongitude(response.data.deliveryAddress.longitude);
+          setDeliveryLocation({latitude: response.data.deliveryAddress.latitude, longitude: response.data.deliveryAddress.longitude});
+          // setLatitude(response.data.deliveryAddress.latitude);
+          // setLongitude(response.data.deliveryAddress.longitude);
         }
       } catch (err: any) {
         setError(
@@ -129,17 +131,36 @@ export default function OrderDetailPage({
     if (orderId) fetchOrderDetails();
   }, [orderId]);
 
-  useEffect(() => {
-    socket.on("location_update", (data) => {
-      if (data) {
-        setLiveLocation(data);
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   socket.on("location_update", (data) => {
+  //     if (data) {
+  //       setDriverLiveLocation(data);
+  //     }
+  //   });
+  // }, []);
+  // Replace the Socket.IO usage
+const [socket, setSocket] = useState<WebSocket | null>(null);
+
+useEffect(() => {
+  if(!orderId) return;
+  const ws = new WebSocket(`ws://localhost:4000?orderId=${orderId}`);
+  setSocket(ws);
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === "location_update") {
+      setDriverLiveLocation(data.data);
+    }
+  };
+
+  return () => {
+    ws.close();
+  };
+}, [orderId]);
 
   useEffect(() => {
-            console.log("Live Location Data:", liveLocation);
-  },  [liveLocation]);
+            console.log("Live Location Data:", driverLiveLocation);
+  },  [driverLiveLocation]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -340,8 +361,10 @@ export default function OrderDetailPage({
             </CardHeader>
             <CardContent className="h-[300px]">
               <DriverMap
-                latitude={Latitude}
-                longitude={Longitude}
+                deliveryLocation={deliveryLocation}
+                driverLiveLocation={driverLiveLocation}
+                // latitude={Latitude}
+                // longitude={Longitude}
                 restLatitude={restLatitude}
                 restLongitude={restLongitude}
               />
