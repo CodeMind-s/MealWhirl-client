@@ -34,7 +34,7 @@ export default function Dashboard() {
 }
 
 function DashboardContent() {
-  const { orders } = useOrders();
+  // const { orders } = useOrders();
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
   const [deliveryPersonId, setDeliveryPersonId] = useState<string>(
@@ -54,7 +54,7 @@ function DashboardContent() {
 
   useEffect(() => {
     if (user) {
-      setDeliveryPersonId(user?._id);
+      setDeliveryPersonId(user?.refID?._id);
     }
   }, [user]);
 
