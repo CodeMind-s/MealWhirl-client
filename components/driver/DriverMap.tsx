@@ -39,15 +39,19 @@ interface CustomRoutingOptions extends L.Routing.RoutingControlOptions {
 }
 
 interface MapProps {
-  latitude: number;
-  longitude: number;
+  // latitude: number;
+  // longitude: number;
+  deliveryLocation:{latitude: number; longitude: number};
+  driverLiveLocation:{latitude: number; longitude: number; timestamp: number};
   restLatitude: number;
   restLongitude: number;
 }
 
 export default function Map({
-  latitude,
-  longitude,
+  // latitude,
+  // longitude,
+  deliveryLocation,
+  driverLiveLocation,
   restLatitude,
   restLongitude,
 }: MapProps) {
@@ -58,8 +62,12 @@ export default function Map({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
     null
   );
-  const destination: L.LatLngTuple = [latitude, longitude];
+  const destination: L.LatLngTuple = [deliveryLocation.latitude, deliveryLocation.longitude];
   const restaurant: L.LatLngTuple = [restLatitude, restLongitude];
+
+  useEffect(() => {
+ console.log("Driver live location updated:", driverLiveLocation);
+  }, [driverLiveLocation]);
 
   // Initialize map only once
   useEffect(() => {
@@ -79,73 +87,59 @@ export default function Map({
     };
   }, []);
 
-  // Get user location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setUserLocation([0, 0]);
-        }
-      );
-    }
-  }, []);
-
   // Update route and markers when location changes
-  useEffect(() => {
-    if (!mapInstance.current || !userLocation) return;
+useEffect(() => {
+  if (!mapInstance.current || !driverLiveLocation) return;
 
-    // Clear previous route and markers
-    if (routingControl.current) {
-      routingControl.current.getPlan().setWaypoints([]);
-      mapInstance.current.removeControl(routingControl.current);
-    }
-    if (userMarkerRef.current) {
-      mapInstance.current.removeLayer(userMarkerRef.current);
-    }
+  // Clear previous route and markers
+  if (routingControl.current) {
+    routingControl.current.getPlan().setWaypoints([]);
+    mapInstance.current.removeControl(routingControl.current);
+  }
+  if (userMarkerRef.current) {
+    mapInstance.current.removeLayer(userMarkerRef.current);
+  }
 
-    // Add user location marker with bike icon
-    userMarkerRef.current = L.marker([userLocation[0], userLocation[1]]).addTo(mapInstance.current);
+  const driverLocation: [number, number] = [driverLiveLocation.latitude, driverLiveLocation.longitude];
 
-    // Add restaurant marker with restaurant icon
-    L.marker([restaurant[0], restaurant[1]], { icon: restaurantIcon }).addTo(
-      mapInstance.current
-    );
+  // Add driver location marker 
+  userMarkerRef.current = L.marker(driverLocation, { icon: bikeIcon }).addTo(mapInstance.current);
 
-    // Add destination marker
-    L.marker([destination[0], destination[1]], { icon: bikeIcon }).addTo(mapInstance.current);
+  // Add restaurant marker with restaurant icon
+  L.marker([restaurant[0], restaurant[1]], { icon: restaurantIcon }).addTo(
+    mapInstance.current
+  );
 
-    // Routing options
-    const routingOptions: CustomRoutingOptions = {
-      waypoints: [
-        L.latLng(userLocation[0], userLocation[1]),
-        L.latLng(restaurant[0], restaurant[1]),
-        L.latLng(destination[0], destination[1]),
-      ],
+  // Add destination marker
+  L.marker([destination[0], destination[1]]).addTo(mapInstance.current);
 
-      routeWhileDragging: false,
-      show: false,
-      addWaypoints: false,
-      fitSelectedRoutes: true,
-      createMarker: () => null,
-      lineOptions: {
-        styles: [{ color: "#0066ff", weight: 5 }],
-        extendToWaypoints: true,
-        missingRouteTolerance: 10,
-      },
-    };
+  // Routing options
+  const routingOptions: CustomRoutingOptions = {
+    waypoints: [
+      L.latLng(driverLocation[0], driverLocation[1]),
+      L.latLng(restaurant[0], restaurant[1]),
+      L.latLng(destination[0], destination[1]),
+    ],
+    routeWhileDragging: false,
+    show: false,
+    addWaypoints: false,
+    fitSelectedRoutes: true,
+    createMarker: () => null,
+    lineOptions: {
+      styles: [{ color: "#0066ff", weight: 5 }],
+      extendToWaypoints: true,
+      missingRouteTolerance: 10,
+    },
+  };
 
-    routingControl.current = L.Routing.control(routingOptions).addTo(
-      mapInstance.current
-    );
+  routingControl.current = L.Routing.control(routingOptions).addTo(
+    mapInstance.current
+  );
 
-    // Fit map bounds
-    mapInstance.current.fitBounds([userLocation, restaurant, destination]);
-  }, [userLocation, latitude, longitude, restLatitude, restLongitude]);
+  // Fit map bounds
+  mapInstance.current.fitBounds([driverLocation, restaurant, destination]);
+}, [driverLiveLocation, deliveryLocation, restLatitude, restLongitude]);
+
 
   return (
     <div style={{ height: "100%", width: "100%" }}>
