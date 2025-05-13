@@ -316,7 +316,9 @@ export function MenuItemsPage() {
                 <DropdownMenuCheckboxItem checked>
                   Available
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Not Available</DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Not Available
+                </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
@@ -369,7 +371,14 @@ export function MenuItemsPage() {
                     </TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {item.category}
+                      {item.category
+                        .toLowerCase()
+                        .split("_")
+                        .map(
+                          (word: string) =>
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(" ")}
                     </TableCell>
                     <TableCell>{item.price}</TableCell>
                     <TableCell className="hidden lg:table-cell max-w-[300px] truncate">
