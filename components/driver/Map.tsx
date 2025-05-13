@@ -4,7 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
-import socket from "@/lib/middleware/socket";
+// import socket from "@/lib/middleware/socket";
 
 // Custom bike icon for user location
 const bikeIcon = new L.Icon({
@@ -44,6 +44,7 @@ interface MapProps {
   longitude: number;
   restLatitude: number;
   restLongitude: number;
+  orderId: string;
 }
 
 export default function Map({
@@ -51,6 +52,7 @@ export default function Map({
   longitude,
   restLatitude,
   restLongitude,
+  orderId,
 }: MapProps) {
   const mapRef = useRef(null);
   const mapInstance = useRef<L.Map | null>(null);
@@ -80,33 +82,55 @@ export default function Map({
     };
   }, []);
 
-  // Get user location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setUserLocation([0, 0]);
-        }
-      );
-    }
-  }, []);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      socket.emit("location_update", {
-        latitude: 12.3456,
-        longitude: 98.7654,
-        timestamp: Date.now(),
-      });
-    }, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+const [socket, setSocket] = useState<WebSocket | null>(null);
+
+useEffect(() => {
+  if (!orderId) return;
+  const ws = new WebSocket(`ws://localhost:4000?orderId=${orderId}`);
+  setSocket(ws);
+
+  return () => {
+    ws.close();
+  };
+}, [orderId]);
+
+useEffect(() => {
+  let lat = 0;
+  let long = 0;
+  if (!socket) return;
+
+  const interval = setInterval(() => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation([latitude, longitude]);
+            lat = latitude;
+            long = longitude;
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+            setUserLocation([0, 0]);
+          }
+        );
+      }
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: "location_update",
+        data: {
+          // latitude: 12.3456,
+          // longitude: 98.7654,
+          latitude: lat ,
+          longitude: long,
+          timestamp: Date.now(),
+        }
+      }));
+    }
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [socket]);
 
   // Update route and markers when location changes
   useEffect(() => {
