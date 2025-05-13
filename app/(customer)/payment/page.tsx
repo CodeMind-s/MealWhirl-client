@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import CheckoutPage from "@/components/CheckoutPage";
 import convertToSubcurrency from "@/lib/convertToSubcurrency";
 import { Elements } from "@stripe/react-stripe-js";
@@ -22,6 +22,11 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
+import { useOrders } from "@/contexts/orders-context";
+import { set } from "date-fns";
+import { createNewOrder } from "@/lib/api/orderApi";
+import { ToastAction } from "@/components/ui/toast";
+import { createNewTransaction } from "@/lib/api/paymentApi";
 
 if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
   throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
@@ -37,16 +42,99 @@ export default function Home() {
     useCart();
   const router = useRouter();
   const { toast } = useToast();
+  const { order, setOrderPaymentMethod } = useOrders();
 
-  const handleNavigate = () => {
-    toast({
-      title: "Success",
-      description: "Order created successfully!",
-      variant: "default",
-    });
-    clearCart();
-    router.push("/order-placed");
-    router.refresh();
+  useEffect(() => {
+    setOrderPaymentMethod(paymentMethod);
+    localStorage.setItem("order", JSON.stringify(order));
+  }, [paymentMethod]);
+
+  const handleNavigate = async () => {
+    try {
+      const paymentData: any = {
+        userId: order.userId,
+        totalAmount: order.totalAmount,
+        deliveryFee: order.deliveryFee,
+        paymentMethod: paymentMethod,
+        paymentStatus: "PENDING",
+        paymentGatewayTransactionId: "",
+        description: description,
+      };
+
+      // setPlacedOrder(data);
+      const paymentResponse: any = await createNewTransaction(paymentData);
+      if (paymentResponse) {
+        toast({
+          title: "Success",
+          description: "Payment created successfully!",
+          variant: "default",
+        });
+
+              const data: any = {
+        userId: order.userId,
+        restaurantId: order.restaurantId,
+        items: order.items.map((item) => ({
+          itemName: item.itemName,
+          quentity: item.quentity.toString(),
+          total: item.total.toString(),
+          imageUrl: item.imageUrl,
+        })),
+        deliveryAddress: {
+          address: order.deliveryAddress.address,
+          latitude: order.deliveryAddress.latitude,
+          longitude: order.deliveryAddress.longitude,
+        },
+        paymentId: paymentResponse.data._id,
+        paymentMethod: paymentMethod,
+        totalAmount: order.totalAmount,
+        deliveryFee: order.deliveryFee,
+        distance: order.distance,
+        duration: order.duration,
+        fare: order.fare,
+        specialInstructions: order.specialInstructions,
+      };
+
+        const response = await createNewOrder(data);
+        if (response) {
+          toast({
+            title: "Success",
+            description: "Order created successfully!",
+            variant: "default",
+          });
+          clearCart();
+          router.push("/order-placed");
+          router.refresh();
+        }
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data && data.message) {
+          toast({
+            title: "Error",
+            description: `Order creation failed: ${data.message}`,
+            variant: "destructive",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "An unexpected error occurred. Please try again.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description:
+            "An unexpected error occurred. Please check your network and try again.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
+    }
   };
 
   return (
@@ -57,14 +145,12 @@ export default function Home() {
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-            {cart.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
+            {order?.items?.map((item, index) => (
+              <div key={index} className="flex justify-between text-sm">
                 <span className="flex-1">
-                  {item.quantity} × {item.name}
+                  {item.quentity} × {item.itemName}
                 </span>
-                <span className="font-medium">
-                  {formatCurrency(item.price * item.quantity)}
-                </span>
+                <span className="font-medium">{item.total}</span>
               </div>
             ))}
           </div>
@@ -72,21 +158,23 @@ export default function Home() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>{formatCurrency(cartSubtotal)}</span>
+              <span>{formatCurrency(order.subTotal)}</span>
             </div>
             <div className="flex justify-between">
               <span>Delivery Fee</span>
-              <span>{formatCurrency(deliveryFee)}</span>
+              <span>{formatCurrency(order.deliveryFee)}</span>
             </div>
             <div className="flex justify-between">
               <span>Tax</span>
-              <span>{formatCurrency(tax)}</span>
+              <span>{formatCurrency(order.tax)}</span>
             </div>
           </div>
           <Separator />
           <div className="flex justify-between font-medium text-lg">
             <span>Total</span>
-            <span className="text-primary">{formatCurrency(cartTotal)}</span>
+            <span className="text-primary">
+              {formatCurrency(order.totalAmount)}
+            </span>
           </div>
 
           <RadioGroup
@@ -126,12 +214,12 @@ export default function Home() {
                   stripe={stripePromise}
                   options={{
                     mode: "payment",
-                    amount: convertToSubcurrency(cartTotal),
+                    amount: convertToSubcurrency(order.totalAmount),
                     currency: "usd",
                   }}
                 >
                   <CheckoutPage
-                    amount={cartTotal}
+                    amount={order.totalAmount}
                     customerName={customerName}
                     description={description}
                   />
