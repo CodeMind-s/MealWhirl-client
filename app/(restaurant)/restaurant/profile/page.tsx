@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { orders } from "@/lib/data";
 import { useEffect, useState } from "react";
-import { getUserByCategoryAndId } from "@/lib/api/userApi";
+// import { getUserByCategoryAndId } from "@/lib/api/userApi";
 import {
   USER_ACCOUNT_STATUS,
   USER_CATEGORIES,
@@ -38,28 +38,28 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setIsLoading(true);
-        const { identifier = null } = user || {};
-        const data = await getUserByCategoryAndId(
-          USER_CATEGORIES.RESTAURANT,
-          identifier,
-          null
-        );
-        setUserData(data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const { identifier = null } = user || {};
+  //       const data = await getUserByCategoryAndId(
+  //         USER_CATEGORIES.RESTAURANT,
+  //         identifier,
+  //         null
+  //       );
+  //       setUserData(data);
+  //     } catch (error) {
+  //       console.error("Error fetching user data:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    if (user && user.accountStatus !== USER_ACCOUNT_STATUS.CREATING) {
-      fetchUserData();
-    }
-  }, [user]);
+  //   if (user && user.accountStatus !== USER_ACCOUNT_STATUS.CREATING) {
+  //     fetchUserData();
+  //   }
+  // }, [user]);
 
   if (isLoading) {
     return (
@@ -70,7 +70,7 @@ export default function ProfilePage() {
   }
 
   // edit profile page
-  if (!isLoading && !userData) {
+  if (!isLoading && !user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h1 className="text-2xl font-bold mb-4">User not found</h1>
@@ -99,12 +99,12 @@ export default function ProfilePage() {
                   />
                 </div>
                 <CardTitle className="text-center">
-                  {userData.name || userData.email}
+                  {user?.refID?.name || 'N/A'}
                 </CardTitle>
-                <CardDescription>{userData.email.value}</CardDescription>
-                {userData.email.isVerified && (
-                  <Badge className="text-xs">Verified</Badge>
-                )}
+                <CardDescription>{userData?.email?.value}</CardDescription>
+                <span className=" text-sm">{user?.email || "N/A"}</span>
+                <Badge className="text-xs mt-2">Verified</Badge>
+          
               </div>
             </CardHeader>
             <CardContent>
@@ -112,8 +112,8 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">
-                    {userData.address
-                      ? `${userData.address.street}, ${userData.address.city}, ${userData.address.state}, ${userData.address.zipCode}, ${userData.address.country}`
+                    {user?.refID?.address
+                      ? `${user?.refID?.address?.street}`
                       : "Address not available"}
                   </span>
                 </div>
@@ -121,7 +121,7 @@ export default function ProfilePage() {
                   <Clock className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">
                     Member since{" "}
-                    {new Date(userData.createdAt).toLocaleDateString("en-US", {
+                    {new Date(user?.createdAt ?? "").toLocaleDateString("en-US", {
                       month: "long",
                       year: "numeric",
                     })}
@@ -176,19 +176,19 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-gray-500">Name</p>
-                        <p>{userData.name || "N/A"}</p>
+                        <p>{user?.refID?.name || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Registration No</p>
-                        <p>{userData.registrationNumber || "N/A"}</p>
+                        <p>{user?._id || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Email</p>
-                        <p>{userData.email?.value || "N/A"}</p>
+                        <p>{user?.email || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Phone</p>
-                        <p>{userData.phoneNumber?.value || "N/A"}</p>
+                        <p>{user?.phone || "N/A"}</p>
                       </div>
                     </div>
                   </div>
@@ -200,19 +200,19 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-gray-500">Name</p>
-                        <p>{userData.owner?.name || "N/A"}</p>
+                        <p>{user?.refID?.name || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">National ID</p>
-                        <p>{userData.owner?.nationalId || "N/A"}</p>
+                        <p>{user?.refID?._id?.toString().slice(0, 12) || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Email</p>
-                        <p>{userData.owner?.email || "N/A"}</p>
+                        <p>{user?.email || "N/A"}</p>
                       </div>
                       <div>
                         <p className="text-gray-500">Phone</p>
-                        <p>{userData.owner?.phone || "N/A"}</p>
+                        <p>{user?.phone || "N/A"}</p>
                       </div>
                     </div>
                   </div>
@@ -230,13 +230,13 @@ export default function ProfilePage() {
                             <p className="font-medium">Business</p>
                             <p className="text-sm text-gray-500">
                               <span className="text-sm">
-                                {userData.address
-                                  ? `${userData.address.street}, ${userData.address.city}, ${userData.address.state}, ${userData.address.zipCode}, ${userData.address.country}`
+                                {user?.refID?.address
+                                  ? `${user?.refID?.address?.street}`
                                   : "Address not available"}
                               </span>
                             </p>
                           </div>
-                          <Badge>Default</Badge>
+                          <Badge>Main Branch</Badge>
                         </div>
                       </div>
                     </div>
@@ -251,24 +251,31 @@ export default function ProfilePage() {
                     </h3>
                     <div className="space-y-4">
                       <div className="border rounded-lg p-4">
-                        {userData.paymentMethods.map((method: any) => (
-                          <div
-                            className="flex justify-between items-start"
-                            key={method.id}
-                          >
-                            <div>
-                              <p className="font-medium">Visa ending in {method.cardNumber}</p>
-                              <p className="text-sm text-gray-500">
-                                Expires {method.expiryDate}
-                              </p>
-                            </div>
-                            <Badge>Default</Badge>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">Visa and Master cards</p>
+                            <p className="text-sm text-gray-500">
+                              no extra charge for this payment method.
+                            </p>
                           </div>
-                        ))}
+                          <Badge>Default</Badge>
+                        </div>
                       </div>
-                      <Button variant="outline" className="w-full">
+                      <div className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">Cash on Delivary</p>
+                            <p className="text-sm text-gray-500">
+                              Around 5% of the total amount will be charged as a
+                              service fee.
+                            </p>
+                          </div>
+          
+                        </div>
+                      </div>
+                      {/* <Button variant="outline" className="w-full">
                         Add Payment Method
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 </CardContent>
