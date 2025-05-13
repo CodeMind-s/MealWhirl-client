@@ -21,11 +21,13 @@ import {
   removeItemFromCart,
 } from "@/lib/api/cartApi";
 import { useAuth } from "@/contexts/auth-context";
+import { useOrders } from "@/contexts/orders-context";
+import { useRouter } from "next/navigation";
 
 interface CartItem {
-  id: string; // Use menuItemId or generated ID
+  id: string;
   restaurantId: string;
-  restaurantName: string; // Assume provided by backend or fallback to restaurantId
+  restaurantName: string;
   menuItemId: string;
   name: string;
   price: number;
@@ -42,12 +44,15 @@ export default function CartPage() {
   const [cartId, setCartId] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
   const { user } = useAuth();
+  const { setOrderData } = useOrders(); // Assuming you have a method to set order data in your context
+  const router = useRouter(); // Assuming you are using Next.js router
 
   useEffect(() => {
     if (user) {
       setUserId(user?._id);
+      console.log("User ID:", cart);
     }
-  }, [user]);
+  }, [user, cart]);
 
   // Fetch cart on mount
   useEffect(() => {
@@ -99,8 +104,8 @@ export default function CartPage() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const deliveryFee = cart.length > 0 ? 2.99 : 0;
-  const tax = cartSubtotal * 0.08; // 8% tax
+  const deliveryFee = cart.length > 0 ? cartSubtotal * 0.03 : 0;
+  const tax = cartSubtotal * 0.02; // 2% tax
   const cartTotal = cartSubtotal + deliveryFee + tax;
 
   const updateQuantity = async (id: string, quantity: number) => {
@@ -197,11 +202,38 @@ export default function CartPage() {
   // }
 
   const handleCheckout = () => {
+    setOrderData({
+      userId: userId,
+      restaurantId: cart[0]?.restaurantId || "",
+      items: cart.map((item) => ({
+        itemName: item.name,
+        quentity: item.quantity.toString(),
+        total: item.price.toString(),
+        imageUrl: item.imageUrl || "",
+      })),
+      deliveryAddress: {
+        address: '',
+        latitude: 0,
+        longitude: 0,
+      },
+      paymentId: "",
+      paymentMethod: "",
+      totalAmount: cartTotal,
+      subTotal: cartSubtotal,
+      deliveryFee: deliveryFee,
+      tax: cartTotal * 0.02,
+      distance: 10,
+      duration: 30,
+      fare: 5,
+      specialInstructions: "",
+      status: "PENDING",
+      paymentStatus: "PENDING",
+    });
     setIsCheckingOut(true);
     // In a real app, you would redirect to checkout or process payment
-    setTimeout(() => {
-      window.location.href = "/checkout";
-    }, 1000);
+    // setTimeout(() => {
+      router.push("/checkout");
+    // }, 1000);
   };
 
   if (isLoading) {
