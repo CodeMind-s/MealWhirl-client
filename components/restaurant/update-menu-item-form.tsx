@@ -51,7 +51,7 @@ export function UpdateMenuItemForm({
     category: selectedItem?.category || "",
     price: selectedItem?.price || 0,
     description: selectedItem?.description || "",
-    isAvailable: selectedItem?.isAvailable || true,
+    isAvailable: selectedItem?.isAvailable === "true" ? 'available' : 'unavailable',
     imagePreview: selectedItem?.imageUrl || "",
     ingredients: "",
     dietaryRestrictions: "",
@@ -65,7 +65,7 @@ export function UpdateMenuItemForm({
             category: selectedItem.category,
             price: selectedItem.price,
             description: selectedItem.description,
-            isAvailable: selectedItem.isAvailable,
+            isAvailable: selectedItem.isAvailable === "true" ? 'available' : 'unavailable',
             imagePreview: selectedItem.imageUrl,
             ingredients: "",
             dietaryRestrictions: "",
@@ -93,7 +93,7 @@ export function UpdateMenuItemForm({
         price: formData.price,
         category: formData.category,
         imageUrl: formData.imagePreview,
-        isAvailable: formData.isAvailable,
+        isAvailable: formData.isAvailable === 'available' ? 'true' : 'false',
       };
 
       const response = await updateMenuItems(selectedItem._id, data);
@@ -111,7 +111,7 @@ export function UpdateMenuItemForm({
           imagePreview: "",
           ingredients: "",
           dietaryRestrictions: "",
-          isAvailable: true,
+          isAvailable: 'available',
         });
         setIsSubmitting(false);
         onOpenChange(false);
@@ -281,11 +281,11 @@ export function UpdateMenuItemForm({
               <Label htmlFor="isAvailable">Availability</Label>
               <RadioGroup
                 id="isAvailable"
-                value={formData.isAvailable ? "available" : "unavailable"}
+                value={formData.isAvailable}
                 onValueChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    isAvailable: value === "true",
+                    isAvailable: value,
                   }))
                 }
                 className="flex"
