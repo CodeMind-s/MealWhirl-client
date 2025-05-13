@@ -25,6 +25,7 @@ type UserType = {
       longitude: number;
     };
     _id: string;
+    name: string;
   };
   createdAt: string;
 };
