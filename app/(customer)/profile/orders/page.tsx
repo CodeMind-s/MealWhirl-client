@@ -21,13 +21,19 @@ import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
 import { orders } from "@/lib/data";
 import { getOrdersByUserId } from "@/lib/api/orderApi";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("ALL");
-  const [userId, setUserId] = useState<string | null>(
-    "67e43a6dd6708a25582d3aaa1"
-  );
+  const [userId, setUserId] = useState<string | null>(null);
   const [userOrders, setUserOrders] = useState<any[]>([ ]);
+  const {user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setUserId(user._id);
+    }
+  }, [user]);
 
   useEffect(() => {
       const fetchOrderDetails = async () => {
@@ -57,12 +63,12 @@ export default function OrdersPage() {
       };
 
       fetchOrderDetails();
-    }, []);
+    }, [userId]);
 
   // Filter orders based on active tab
   const filteredOrders = userOrders.filter((order) => {
     if (activeTab === "ALL") return true;
-    return order.orderStatus.toLowerCase() === activeTab;
+    return order.orderStatus.toUpperCase() === activeTab;
   });
 
   const getStatusIcon = (status: string) => {
