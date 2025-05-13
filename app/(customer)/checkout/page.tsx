@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, CreditCard, MapPin, ShieldCheck } from "lucide-react";
 
@@ -26,6 +26,7 @@ import { createNewOrder } from "@/lib/api/orderApi";
 import { ToastAction } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { usePlacedOrder } from "@/contexts/placed-order-context";
+import { useOrders } from "@/contexts/orders-context";
 
 interface ItemsData {
   itemName: string;
@@ -76,69 +77,77 @@ export default function Checkout() {
   const [phone, setPhone] = useState<string>("");
   const [instructions, setInstructions] = useState<string>("");
   const { setPlacedOrder } = usePlacedOrder();
+  const {order, setAddressDetails} = useOrders();
 
+  useEffect(() => {
+    console.log("orders", order);
+  }, [order]);
+ 
   const handlePlaceOrder = async (e: any) => {
     e.preventDefault();
-    try {
-      const data: any = {
-        userId: userId,
-        restaurantId: "restaurantId",
-        items: cart.map((item) => ({
-          itemName: item.name,
-          quentity: item.quantity.toString(),
-          total: item.price.toString(),
-          imageUrl:
-            "https://th.bing.com/th/id/OIP.5XZGu7I9rqQc67dpzviiugHaE7?rs=1&pid=ImgDetMain",
-        })),
-        deliveryAddress: {
-          address: address,
-          latitude: 0,
-          longitude: 0,
-        },
-        paymentId: "paymentid",
-        paymentMethod: paymentMethod,
-        totalAmount: cartTotal,
-        deliveryFee: deliveryFee,
-        distance: 10,
-        duration: 30,
-        fare: 5,
-        specialInstructions: instructions,
-      };
-      setPlacedOrder(data);
-      const response = await createNewOrder(data);
-      if (response) {
-        // clearCart();
-        router.push("/payment");
-      }
-    } catch (error: any) {
-      if (error.response) {
-        const { data } = error.response;
+    setIsSubmitting(true); 
+    setAddressDetails(address, instructions);
+    router.push("/payment");
+    // try {
+    //   const data: any = {
+    //     userId: userId,
+    //     restaurantId: "restaurantId",
+    //     items: cart.map((item) => ({
+    //       itemName: item.name,
+    //       quentity: item.quantity.toString(),
+    //       total: item.price.toString(),
+    //       imageUrl:
+    //         "https://th.bing.com/th/id/OIP.5XZGu7I9rqQc67dpzviiugHaE7?rs=1&pid=ImgDetMain",
+    //     })),
+    //     deliveryAddress: {
+    //       address: address,
+    //       latitude: 0,
+    //       longitude: 0,
+    //     },
+    //     paymentId: "paymentid",
+    //     paymentMethod: paymentMethod,
+    //     totalAmount: cartTotal,
+    //     deliveryFee: deliveryFee,
+    //     distance: 10,
+    //     duration: 30,
+    //     fare: 5,
+    //     specialInstructions: instructions,
+    //   };
+    //   setPlacedOrder(data);
+    //   const response = await createNewOrder(data);
+    //   if (response) {
+    //     // clearCart();
+    //     router.push("/payment");
+    //   }
+    // } catch (error: any) {
+    //   if (error.response) {
+    //     const { data } = error.response;
 
-        if (data && data.message) {
-          toast({
-            title: "Error",
-            description: `Order creation failed: ${data.message}`,
-            variant: "destructive",
-            action: <ToastAction altText="Try again">Try again</ToastAction>,
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong.",
-            description: "An unexpected error occurred. Please try again.",
-            action: <ToastAction altText="Try again">Try again</ToastAction>,
-          });
-        }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong.",
-          description:
-            "An unexpected error occurred. Please check your network and try again.",
-          action: <ToastAction altText="Try again">Try again</ToastAction>,
-        });
-      }
-    }
+    //     if (data && data.message) {
+    //       toast({
+    //         title: "Error",
+    //         description: `Order creation failed: ${data.message}`,
+    //         variant: "destructive",
+    //         action: <ToastAction altText="Try again">Try again</ToastAction>,
+    //       });
+    //     } else {
+    //       toast({
+    //         variant: "destructive",
+    //         title: "Uh oh! Something went wrong.",
+    //         description: "An unexpected error occurred. Please try again.",
+    //         action: <ToastAction altText="Try again">Try again</ToastAction>,
+    //       });
+    //     }
+    //   } else {
+    //     toast({
+    //       variant: "destructive",
+    //       title: "Uh oh! Something went wrong.",
+    //       description:
+    //         "An unexpected error occurred. Please check your network and try again.",
+    //       action: <ToastAction altText="Try again">Try again</ToastAction>,
+    //     });
+    //   }
+    // }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -284,13 +293,13 @@ export default function Checkout() {
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
+                {order?.items?.map((item, index) => (
+                  <div key={index} className="flex justify-between text-sm">
                     <span className="flex-1">
-                      {item.quantity} × {item.name}
+                      {item.quentity} x {item.itemName}
                     </span>
                     <span className="font-medium">
-                      {formatCurrency(item.price * item.quantity)}
+                      {item.total}
                     </span>
                   </div>
                 ))}
@@ -299,22 +308,22 @@ export default function Checkout() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>{formatCurrency(cartSubtotal)}</span>
+                  <span>{formatCurrency(order.subTotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee</span>
-                  <span>{formatCurrency(deliveryFee)}</span>
+                  <span>{formatCurrency(order.deliveryFee)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>{formatCurrency(tax)}</span>
+                  <span>{formatCurrency(order.tax)}</span>
                 </div>
               </div>
               <Separator />
               <div className="flex justify-between font-medium text-lg">
                 <span>Total</span>
                 <span className="text-primary">
-                  {formatCurrency(cartTotal)}
+                  {formatCurrency(order.totalAmount)}
                 </span>
               </div>
             </CardContent>
