@@ -36,13 +36,13 @@ import { useToast } from "@/hooks/use-toast";
 interface AddMenuItemFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddItem?: (item: any) => void;
+  // onAddItem?: (item: any) => void;
 }
 
 export function AddMenuItemForm({
   open,
   onOpenChange,
-  onAddItem,
+  // onAddItem,
 }: AddMenuItemFormProps) {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +56,7 @@ export function AddMenuItemForm({
     imagePreview: "",
     ingredients: "",
     dietaryRestrictions: "",
-    isAvailable: true,
+    isAvailable: "available",
   });
   const { toast } = useToast();
 
@@ -80,7 +80,7 @@ export function AddMenuItemForm({
         price: formData.price,
         category: formData.category,
         imageUrl: formData.imagePreview,
-        isAvailable: formData.isAvailable,
+        isAvailable: formData.isAvailable === "available" ? "true" : "false",
         restaurantId: user?.refID._id,
       };
 
@@ -101,7 +101,7 @@ export function AddMenuItemForm({
           imagePreview: "",
           ingredients: "",
           dietaryRestrictions: "",
-          isAvailable: true,
+          isAvailable: "available",
         });
         setIsSubmitting(false);
         onOpenChange(false);
@@ -271,21 +271,21 @@ export function AddMenuItemForm({
               <Label htmlFor="isAvailable">Availability</Label>
               <RadioGroup
                 id="isAvailable"
-                value={formData.isAvailable ? "true" : "false"}
+                value={formData.isAvailable}
                 onValueChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    isAvailable: value === "true",
+                    isAvailable: value,
                   }))
                 }
                 className="flex"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="true" id="available" />
+                  <RadioGroupItem value="available" id="available" />
                   <Label htmlFor="available">Available</Label>
                 </div>
                 <div className="flex items-center space-x-2 ml-4">
-                  <RadioGroupItem value="false" id="unavailable" />
+                  <RadioGroupItem value="unavailable" id="unavailable" />
                   <Label htmlFor="unavailable">Unavailable</Label>
                 </div>
               </RadioGroup>
