@@ -139,7 +139,7 @@ export default function ProfilePage() {
       try {
         new Notification(notification.title, {
           body: notification.message,
-          icon: "/placeholder-logo.png", // Replace with your app's logo if available
+          icon: "/images/logo.png", // Replace with your app's logo if available
         });
       } catch (error) {
         console.error("Error displaying notification:", error);
