@@ -51,9 +51,9 @@ export default function Notifications() {
                 title: "Notification marked as read",
                 description: "The notification has been marked as read.",
             });
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            setNotifications((prevNotifications) =>
+                prevNotifications.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+            );
         } catch (error) {
             console.error("Error marking notification as read:", error);
             toast({
@@ -119,6 +119,30 @@ export default function Notifications() {
             });
         }
     };
+
+    useEffect(() => {
+        if (notifications.length > 0) {
+            const unreadNotifications = notifications.filter((n) => !n.isRead);
+            unreadNotifications.forEach((notification) => {
+                if ("Notification" in window && Notification.permission === "granted") {
+                    new Notification(notification.title, {
+                        body: notification.message,
+                        icon: "/images/logo.png", // Replace with your app's icon if available
+                    });
+                }
+            });
+        }
+    }, [notifications]);
+
+    useEffect(() => {
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission().then((permission) => {
+                if (permission !== "granted") {
+                    console.warn("Push notifications permission denied");
+                }
+            });
+        }
+    }, []);
 
     return (
         <div className="container mx-auto py-24">
