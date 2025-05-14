@@ -198,6 +198,7 @@ export function OrdersPage() {
             open={isUpdateModalOpen}
             onOpenChange={setIsUpdateModalOpen}
             orderId={selectedOrder._id}
+            userId={selectedOrder.userId}
             currentStatus={selectedOrder.orderStatus}
             onStatusUpdate={handleStatusUpdate}
           />
