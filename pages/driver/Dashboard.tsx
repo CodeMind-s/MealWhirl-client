@@ -85,6 +85,27 @@ function DashboardContent() {
               description: `${readyToPickupOrders.length} orders are ready to pickup.`,
               variant: "default",
             });
+
+            // Show browser push notification
+            if (Notification.permission === "granted") {
+              readyToPickupOrders.forEach((order: any) => {
+                new Notification("Order Ready for Pickup", {
+                  body: `Order #${order._id} is ready for pickup.`,
+                  icon: "/images/logo.png", // Replace with your app's logo
+                });
+              });
+            } else if (Notification.permission !== "denied") {
+              Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                  readyToPickupOrders.forEach((order: any) => {
+                    new Notification("Order Ready for Pickup", {
+                      body: `Order #${order._id} is ready for pickup.`,
+                      icon: "/images/logo.png", // Replace with your app's logo
+                    });
+                  });
+                }
+              });
+            }
           }
         }
       } catch (err: any) {
