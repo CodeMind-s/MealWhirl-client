@@ -120,9 +120,7 @@ export default function NotificationsPage() {
         description: "The notification has been deleted successfully.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      setNotifications((prev) => [...prev]);
 
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -142,9 +140,11 @@ export default function NotificationsPage() {
         description: `Marked notification as read: ${notificationId}`,
         variant: "default",
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification._id === notificationId ? { ...notification, isRead: true } : notification
+        )
+      );
     } catch (error) {
       console.error("Error marking notification as read:", error);
       toast({
