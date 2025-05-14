@@ -45,7 +45,7 @@ import {
 } from "../ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "../ui/toast";
-import { sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
+import { createNotification, sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
 
 import dynamic from "next/dynamic";
 
@@ -109,6 +109,9 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
   const [restLatitude, setRestLatitude] = useState<number>(6.92254243510281);
   const [restLongitude, setRestLongitude] = useState<number>(79.91822361239088);
 
+  const [userId, setUserId] = useState<string>("");
+  const [restaurantId, setRestaurantId] = useState<string>("");
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -117,6 +120,8 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           setOrderDetails(response.data);
           setLatitude(response.data.deliveryAddress.latitude);
           setLongitude(response.data.deliveryAddress.longitude);
+          setUserId(response.data.userId);
+          setRestaurantId(response.data.restaurantId);
         }
       } catch (err: any) {
         if (err.response) {
@@ -161,23 +166,24 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
 
         // Send SMS notification to the customer
         const smsMessages = {
-          PLACED: "Our valued cutomer, Your order has been placed successfully!",
-          ACCEPTED: "Our valued cutomer, Your order has been accepted by the restaurant.",
-          PREPARING: "Our valued cutomer, Your order is being prepared.",
-          REDY_FOR_PICKUP: "Our valued cutomer,Your order is ready for pickup.",
-          PICKED_UP: "Our valued cutomer, Your order has been picked up by the delivery person.",
-          ON_THE_WAY: "Our valued cutomer,Your order is on the way!",
-          DELIVERED: "Our valued cutomer, Your order has been delivered. Enjoy your meal!",
+          PLACED: "MealWhirl\n\nOur valued customer, Your order has been placed successfully!",
+          ACCEPTED: "MealWhirl\n\nOur valued customer, Your order has been accepted by the restaurant.",
+          PREPARING: "MealWhirl\n\nOur valued customer, Your order is being prepared.",
+          REDY_FOR_PICKUP: "MealWhirl\n\nOur valued customer, Your order is ready for pickup.",
+          PICKED_UP: "MealWhirl\n\nOur valued customer, Your order has been picked up by the delivery person.",
+          ON_THE_WAY: "MealWhirl\n\nOur valued customer, Your order is on the way!",
+          DELIVERED: "MealWhirl\n\nOur valued customer, Your order has been delivered. Enjoy your meal!",
           CANCELLED:
-            "Our valued cutomer, Your order has been cancelled. If you have any questions, please contact support.",
+            "MealWhirl\n\nOur valued customer, Your order has been cancelled. If you have any questions, please contact support.",
         };
 
         const smsData = {
           to: "94774338424", // Assuming phone number is part of deliveryAddress
           message: smsMessages[status],
         };
+
         try {
-          await sendSMSNotification(smsData);
+          // await sendSMSNotification(smsData);
           toast({
             title: "Notification Sent",
             description: "Customer has been notified via SMS.",
@@ -188,6 +194,51 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
             variant: "destructive",
             title: "Notification Error",
             description: "Failed to send SMS notification to the customer.",
+          });
+
+        }
+
+        // Create notification for the user
+        const userNotification = {
+          userId: userId,
+          title: "Order Status Updated",
+          message: `Your order status has been updated to: ${statusLabels[status]}`,
+        };
+
+        try {
+          await createNotification(userNotification);
+          // toast({
+          //   title: "User Notification Sent",
+          //   description: "User has been notified about the order status update.",
+          // });
+        } catch (userNotificationError) {
+          console.error("Error sending user notification:", userNotificationError);
+          toast({
+            variant: "destructive",
+            title: "Notification Error",
+            description: "Failed to send notification to the user.",
+          });
+        }
+
+        // Create notification for the customer
+        const customerNotification = {
+          userId: restaurantId,
+          title: "Order Status Updated",
+          message: `The order status has been updated to: ${statusLabels[status]}`,
+        };
+
+        try {
+          await createNotification(customerNotification);
+          // toast({
+          //   title: "Customer Notification Sent",
+          //   description: "Customer has been notified about the order status update.",
+          // });
+        } catch (customerNotificationError) {
+          console.error("Error sending customer notification:", customerNotificationError);
+          toast({
+            variant: "destructive",
+            title: "Notification Error",
+            description: "Failed to send notification to the customer.",
           });
         }
 
