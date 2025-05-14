@@ -1,4 +1,4 @@
-import NotificationsPage from "@/pages/super/notifications-page"
+import NotificationsPage from "@/pages/restaurant/notifications-page"
 
 export default function Page() {
   return <NotificationsPage />
