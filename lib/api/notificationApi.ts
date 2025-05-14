@@ -30,7 +30,7 @@ interface EmailNotification {
   };
 }
 
-export const createNewNotification = async (data: Notification) => {
+export const createNotification = async (data: any) => {
   try {
     const response = await axiosInstance.post(`/notifications`, data);
     return response;
