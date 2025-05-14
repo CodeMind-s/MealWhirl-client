@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, ChevronLeft, Coffee, LayoutDashboard, Package, Receipt, Settings, ShoppingBag } from "lucide-react"
+import { BarChart3, Bell, ChevronLeft, Coffee, LayoutDashboard, Package, Receipt, Settings, ShoppingBag } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -46,7 +46,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
             <NavItem icon={ShoppingBag} label="Orders" href="/restaurant/orders" open={open} />
             <NavItem icon={Receipt} label="Transactions" href="/restaurant/transactions" open={open} />
             <NavItem icon={Package} label="Menu Items" href="/restaurant/menu-items" open={open} />
-            <NavItem icon={BarChart3} label="Analytics" href="/restaurant/analytics" open={open} />
+            <NavItem icon={Bell} label="Notifications" href="/restaurant/notifications" open={open} />
             <NavItem icon={Settings} label="Settings" href="/restaurant/settings" open={open} />
           </div>
         </div>
