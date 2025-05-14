@@ -24,6 +24,7 @@ import { getAllOrders, getOrdersByDeliveryPersonId } from "@/lib/api/orderApi";
 import { useToast } from "@/hooks/use-toast";
 import notifySound from "@/assets/audio/notify.mp3";
 import { useAuth } from "@/contexts/auth-context";
+import Link from "next/link";
 
 export default function Dashboard() {
   return (
@@ -37,9 +38,7 @@ function DashboardContent() {
   // const { orders } = useOrders();
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
-  const [deliveryPersonId, setDeliveryPersonId] = useState<string>(
-    ""
-  );
+  const [deliveryPersonId, setDeliveryPersonId] = useState<string>("");
   const [todayOrders, setTodayOrders] = useState<any>([]);
   const [pendingOrders, setPendingOrders] = useState<any>([]);
   const [inProgressOrders, setInProgressOrders] = useState<any>([]);
@@ -49,19 +48,21 @@ function DashboardContent() {
   // Add a state to track if audio is enabled
   const [audioEnabled, setAudioEnabled] = useState(false);
 
-    // const [userId, setUserId] = useState<string>("");
+  // const [userId, setUserId] = useState<string>("");
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
-      setDeliveryPersonId(user?.refID?._id);
+      setDeliveryPersonId(user?._id);
     }
   }, [user]);
+
+  // console.log(`deliveryPersonId => `, deliveryPersonId);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const response = await getOrdersByDeliveryPersonId(deliveryPersonId);
+        const response = await getOrdersByDeliveryPersonId(user?._id ?? "");
         if (response.data) {
           setDriverOrders(response.data);
           console.log(`driverOrders => `, response.data);
@@ -274,10 +275,12 @@ function DashboardContent() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
+                <Link href="/driver/profile">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -298,8 +301,14 @@ function DashboardContent() {
                 Driver Dashboard
               </h2>
               <div className="hidden md:flex gap-2">
-                <Button variant="outline">History</Button>
-                <Button variant="outline">Settings</Button>
+                <Button variant="outline" onClick={() => { window.location.href = "/driver/notifications"; }}>
+                  <Bell className="mr-2 h-4 w-4" />
+                  Notifications
+                </Button>
+                <Button variant="outline" onClick={() => { window.location.href = "/driver/profile"; }}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </Button>
               </div>
             </div>
 
@@ -413,8 +422,9 @@ function DashboardContent() {
               </Tabs>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+        )
+        }
+      </main >
+    </div >
   );
 }
