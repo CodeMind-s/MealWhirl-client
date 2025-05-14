@@ -117,7 +117,39 @@ export default function ProfilePage() {
     if (user && notifications.length === 0) {
       getAllNotifications(user._id);
     }
+
+    // Request notification permission on component mount
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch((err) => {
+        console.error("Notification permission error:", err);
+      });
+    }
   }, [user, notifications]);
+
+  const showBrowserNotification = (notification: { title: string; message: string }): void => {
+    console.log("Attempting to show notification:", notification);
+
+    if (!("Notification" in window)) {
+      console.error("This browser does not support desktop notifications.");
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      console.log("Notification permission granted. Displaying notification.");
+      try {
+        new Notification(notification.title, {
+          body: notification.message,
+          icon: "/placeholder-logo.png", // Replace with your app's logo if available
+        });
+      } catch (error) {
+        console.error("Error displaying notification:", error);
+      }
+    } else if (Notification.permission === "denied") {
+      console.warn("Notification permission was denied by the user.");
+    } else {
+      console.warn("Notification permission is not granted. Current state:", Notification.permission);
+    }
+  };
 
   const getAllNotifications = async (userId: string): Promise<any> => {
     try {
@@ -125,6 +157,13 @@ export default function ProfilePage() {
       if (response.status === 200) {
         const sortedNotifications = (response.data as any[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setNotifications(sortedNotifications);
+
+        // Show browser notifications for unread notifications
+        sortedNotifications.forEach((notification) => {
+          if (!notification.isRead) {
+            showBrowserNotification(notification);
+          }
+        });
       } else {
         throw new Error("Failed to fetch notifications");
       }
