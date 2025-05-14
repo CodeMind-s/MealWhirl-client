@@ -19,13 +19,16 @@ type UserType = {
   type: string;
   isAdmin: boolean;
   refID: {
-    address: {
+    address?: {
       street: string;
       latitude: number;
       longitude: number;
     };
     _id: string;
     name: string;
+    vehicleType?: string;
+    licenseNumber?: string;
+    availabilityStatus?: string;
   };
   createdAt: string;
 };
@@ -77,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (response.user.isAdmin) {
         router.push("/super");
-      } else{
+      } else {
         if (response.user.type === "Customer") {
           router.push("/");
         } else if (response.user.type === "Driver") {
