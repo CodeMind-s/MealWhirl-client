@@ -1,21 +1,114 @@
 "use client"
 
+import { useState } from "react";
 import Link from "next/link"
 import Image from "next/image"
-import { Clock, MapPin, Settings, ShoppingBag, User } from "lucide-react"
+import { Clock, MapPin, Phone, Settings, ShoppingBag, User, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { orders } from "@/lib/data"
 import { useAuth } from "@/contexts/auth-context"
+import { updateUserById } from "@/lib/api/userApi";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
   const { logout } = useAuth();
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}") : null;
+  // console.log(`user => `, user);
+  const [formData, setFormData] = useState({
+    email: user?.email || "",
+    password: "",
+    phone: user?.phone || "",
+    refID: {
+      address: {
+        street: user?.refID?.address?.street || "",
+        latitude: user?.refID?.address?.latitude || 0,
+        longitude: user?.refID?.address?.longitude || 0,
+      },
+    },
+  });
+  const [errors, setErrors] = useState<{ email?: string; password?: string; phone?: string; street?: string }>({});
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Get recent orders (last 3)
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string; phone?: string; street?: string } = {};
+    if (!formData.email) newErrors.email = "Email is required.";
+    if (!formData.password) newErrors.password = "Password is required.";
+    if (!formData.phone) newErrors.phone = "Phone number is required.";
+    if (!formData.refID.address.street) newErrors.street = "Street address is required.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      refID: {
+        ...prev.refID,
+        address: {
+          ...prev.refID.address,
+          [name]: value,
+        },
+      },
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    try {
+      const updatedUser = await updateUserById(user._id, formData);
+      console.log("User updated successfully:", updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+        variant: "default",
+      });
+      window.location.reload();
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully.",
+      variant: "default",
+    });
+    window.location.href = "/login";
+  };
+
+  const formattedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+  }) : "";
+
   const recentOrders = orders.slice(0, 3)
 
   return (
@@ -29,31 +122,36 @@ export default function ProfilePage() {
               <div className="flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
                   <Image
-                    src="/placeholder.svg?height=96&width=96"
+                    src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"
                     alt="Profile"
                     width={96}
                     height={96}
                     className="object-cover"
                   />
                 </div>
-                <CardTitle>John Doe</CardTitle>
-                <CardDescription>john.doe@example.com</CardDescription>
+                <CardTitle className="text-lg font-semibold">
+                  {user?.name || user?.email?.split("@")[0]?.charAt(0).toUpperCase() + user?.email?.split("@")[0]?.slice(1) || "John Doe"}</CardTitle>
+                <CardDescription>{user?.email || "john.doe@example.com"}</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">123 Main St, Anytown, CA 12345</span>
+                  <span className="text-sm">{user?.refID?.address?.street || ""}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">Member since Jan 2023</span>
+                  <span className="text-sm">Member since {formattedDate || "Jan 2023"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">Phone: {user?.phone || "N/A"}</span>
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setIsDialogOpen(true)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
@@ -88,16 +186,13 @@ export default function ProfilePage() {
               <Button
                 variant="destructive"
                 className="w-full"
-                onClick={() => {
-                  logout();
-                  window.location.href = "/login";
-                }}
+                onClick={handleLogout}
               >
                 Logout
               </Button>
             </CardContent>
           </Card>
-        </div>
+        </div >
 
         <div className="md:col-span-2">
           <Tabs defaultValue="orders" className="w-full">
@@ -251,7 +346,78 @@ export default function ProfilePage() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </div>
+      </div >
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+              />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+            </div>
+            <div>
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="text"
+                value={formData.phone}
+                onChange={handleInputChange}
+              />
+              {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+            </div>
+            <div>
+              <Label htmlFor="street">Street Address</Label>
+              <Input
+                id="street"
+                name="street"
+                type="text"
+                value={formData.refID.address.street}
+                onChange={handleAddressChange}
+              />
+              {errors.street && <p className="text-red-500 text-sm">{errors.street}</p>}
+            </div>
+          </form>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="default" onClick={handleSubmit}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div >
   )
 }
