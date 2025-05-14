@@ -49,10 +49,10 @@ export default function CartPage() {
 
   useEffect(() => {
     if (user) {
-      setUserId(user?._id);
-      console.log("User ID:", cart);
+      setUserId(user._id);
+      console.log("User ID:", user._id);
     }
-  }, [user, cart]);
+  }, [user]);
 
   // Fetch cart on mount
   useEffect(() => {
