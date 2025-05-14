@@ -30,9 +30,7 @@ interface EmailNotification {
   };
 }
 
-export const createNewNotification = async (
-  data: Notification
-) => {
+export const createNewNotification = async (data: Notification) => {
   try {
     const response = await axiosInstance.post(`/notifications`, data);
     return response;
@@ -42,9 +40,7 @@ export const createNewNotification = async (
   }
 };
 
-export const sendSMSNotification = async (
-  data: SMSNotification
-) => {
+export const sendSMSNotification = async (data: SMSNotification) => {
   try {
     const response = await axiosInstance.post(`/notifications/sms`, data);
     return response;
@@ -54,14 +50,50 @@ export const sendSMSNotification = async (
   }
 };
 
-export const sendEmailNotification = async (
-  data: EmailNotification
-) => {
+export const sendEmailNotification = async (data: EmailNotification) => {
   try {
     const response = await axiosInstance.post(`/notifications/email`, data);
     return response;
   } catch (error) {
     console.log("Error while sending Email notification:", error);
+    throw error;
+  }
+};
+
+export const getNotificationsByUser = async (userId: string) => {
+  try {
+    const response = await axiosInstance.get(`/notifications/user/${userId}`);
+    return response;
+  } catch (error) {
+    console.log("Error while fetching notifications:", error);
+    throw error;
+  }
+};
+
+export const deleteNotification = async (notificationId: string) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/notifications/${notificationId}`
+    );
+    return response;
+  } catch (error) {
+    console.log("Error while deleting notification:", error);
+    throw error;
+  }
+};
+
+export const markNotificationsAsRead = async (
+  notificationId: string,
+  data: { isRead: boolean }
+) => {
+  try {
+    const response = await axiosInstance.patch(
+      `/notifications/${notificationId}`,
+      data
+    );
+    return response;
+  } catch (error) {
+    console.log("Error while marking all notifications as read:", error);
     throw error;
   }
 };
