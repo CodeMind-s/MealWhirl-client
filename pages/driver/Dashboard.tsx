@@ -268,20 +268,20 @@ function DashboardContent() {
               <DropdownMenuContent align="end">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{"John Driver"}</p>
+                    <p className="font-medium">{"Email"}</p>
                     <p className="text-sm text-muted-foreground">
-                      {"driver@example.com"}
+                      {user?.email}
                     </p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <Link href="/driver/profile">
+                {/* <Link href="/driver/profile">
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                </Link>
-                <DropdownMenuItem onClick={handleLogout}>
+                </Link> */}
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -316,7 +316,7 @@ function DashboardContent() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="col-span-2 md:col-span-1 bg-primary/10 rounded-lg p-4">
                   <div className="text-sm font-medium text-muted-foreground">
-                    Total Orders Today
+                    Total Orders
                   </div>
                   <div className="text-2xl font-bold">{todayOrders.length}</div>
                 </div>
@@ -347,19 +347,19 @@ function DashboardContent() {
               </div>
 
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="pending">
+                  <TabsTrigger value="assigned">Assigned</TabsTrigger>
+                  {/* <TabsTrigger value="pending">
                     Pending
                     {pendingOrders.length > 0 && (
                       <Badge variant="secondary" className="ml-2 bg-yellow-500/50">
                         {pendingOrders.length}
                       </Badge>
                     )}
-                  </TabsTrigger>
+                  </TabsTrigger> */}
                   <TabsTrigger value="in_progress">In Progress</TabsTrigger>
                   <TabsTrigger value="delivered">Delivered</TabsTrigger>
-                  <TabsTrigger value="assigned">Assigned</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="mt-4">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -398,24 +398,28 @@ function DashboardContent() {
                 </TabsContent>
                 <TabsContent value="in_progress" className="mt-4">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {inProgressOrders.map((order: any) => (
-                      <OrderCard
-                        key={order._id}
-                        order={order}
-                        onClick={() => handleOrderSelect(order._id)}
-                      />
-                    ))}
+                    {driverOrders
+                      .filter((order: any) => order.orderStatus === "PICKED_UP" || order.orderStatus === "ON_THE_WAY")
+                      .map((order: any) => (
+                        <OrderCard
+                          key={order._id}
+                          order={order}
+                          onClick={() => handleOrderSelect(order._id)}
+                        />
+                      ))}
                   </div>
                 </TabsContent>
                 <TabsContent value="delivered" className="mt-4">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {completedOrders.map((order: any) => (
-                      <OrderCard
-                        key={order._id}
-                        order={order}
-                        onClick={() => handleOrderSelect(order._id)}
-                      />
-                    ))}
+                    {driverOrders
+                      .filter((order: any) => order.orderStatus === "DELIVERED")
+                      .map((order: any) => (
+                        <OrderCard
+                          key={order._id}
+                          order={order}
+                          onClick={() => handleOrderSelect(order._id)}
+                        />
+                      ))}
                   </div>
                 </TabsContent>
 
