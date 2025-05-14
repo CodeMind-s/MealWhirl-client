@@ -26,6 +26,7 @@ export default function Profile() {
     const { toast } = useToast()
     const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
+        name: user?.name || "John Driver",
         email: user?.email || "driver@example.com",
         password: "*********",
         phone: user?.phone || "(555) 123-4567",
@@ -140,8 +141,7 @@ export default function Profile() {
                                     </Button>
                                 </div>
                                 <div>
-                                    {/* <CardTitle className="text-2xl">{formData.name}</CardTitle> */}
-                                    <CardDescription>{formData.email}</CardDescription>
+                                    <CardTitle className="text-2xl">{formData.name}</CardTitle>
                                     <div className="flex items-center gap-2 mt-1">
                                         <Badge variant="secondary" className="text-xs">Driver</Badge>
                                         <div className="flex items-center text-yellow-500">
