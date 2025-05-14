@@ -81,7 +81,7 @@ export function AddMenuItemForm({
         category: formData.category,
         imageUrl: formData.imagePreview,
         isAvailable: formData.isAvailable === "available" ? "true" : "false",
-        restaurantId: user?.refID._id,
+        restaurantId: user?._id,
       };
 
       const response = await createNewMenuItem(data);
