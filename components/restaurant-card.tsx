@@ -3,6 +3,9 @@ import Image from "next/image"
 import { Star, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { get } from "axios"
+import { getUserById } from "@/lib/api/userApi"
+import { use, useEffect, useState } from "react"
 // import type { Restaurant } from "@/lib/types"
 
 interface Restaurant {
@@ -36,6 +39,29 @@ interface Restaurant {
 }
 
 export default function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
+  // const [restaurantData, setRestaurantData] = useState<Restaurant | null>(null);
+
+  // useEffect(() => {
+  //   fetchRestaurant(restaurant.id)
+  //     .then((data) => {
+  //       setRestaurantData(data)
+  //       console.log("Restaurant data:", data)
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching restaurant data:", error)
+  //     })
+  // }, [restaurant.id]);
+
+  // const fetchRestaurant = async (id: string) => {
+  //   try {
+  //     const response = await getUserById(id) as { data: Restaurant }
+  //     return response.data
+  //   } catch (error) {
+  //     console.error("Failed to fetch restaurant:", error)
+  //     throw error
+  //   }
+  // };
+
   return (
     <Link href={`/restaurants/${restaurant.id}`}>
       <Card className="overflow-hidden h-full transition-all hover:shadow-md hover:border-primary/50 group">

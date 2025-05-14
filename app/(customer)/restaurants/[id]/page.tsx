@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/lib/cart-context";
-import { getUserByCategoryAndId } from "@/lib/api/userApi";
+import { getUserById } from "@/lib/api/userApi";
 import { USER_CATEGORIES } from "@/constants/userConstants";
 import { MenuCategory, MenuItem, Restaurant } from "@/types/Restaurant";
 import { mapToRestaurant } from "../page";
@@ -79,18 +79,38 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchRestaurantData = async () => {
       try {
-        const data = await getUserByCategoryAndId(
-          USER_CATEGORIES.RESTAURANT,
-          params.id,
-          null
-        );
-        setRestaurant(mapToRestaurant([data])[0]);
-        const menuCategories = mapToMenuCategories(data.menu, data.identifier);
-        setMenuCategories(menuCategories);
-        const categoryIdMap = Object.fromEntries(
-          menuCategories.map((category) => [category.name, category.id])
-        );
-        setMenuItems(mapToMenuItems(data.menu, data.identifier, categoryIdMap));
+        const data = (await getUserById(params.id)) as {
+          refID: {
+            _id: string;
+            name: string;
+            address: { street: string };
+          };
+        };
+
+        // Map the fetched data to the restaurant state
+        setRestaurant({
+          id: data.refID._id,
+          name: data.refID.name,
+          image: undefined, // Placeholder for image
+          description: `Located at ${data.refID.address.street}, offering delicious meals.`,
+          cuisineType: "", // Placeholder for cuisine type
+          rating: 0, // Placeholder for rating
+          reviewCount: 0, // Placeholder for review count
+          deliveryTime: 0, // Placeholder for delivery time
+          deliveryFee: 0, // Placeholder for delivery fee
+          minOrder: 0, // Placeholder for minimum order
+          distance: 0, // Placeholder for distance
+          isOpen: true, // Assuming the restaurant is open
+          isNew: false, // Assuming the restaurant is not new
+        });
+
+        // Uncomment and map menu data if available in the future
+        // const menuCategories = mapToMenuCategories(data.menu, data.refID._id);
+        // setMenuCategories(menuCategories);
+        // const categoryIdMap = Object.fromEntries(
+        //   menuCategories.map((category) => [category.name, category.id])
+        // );
+        // setMenuItems(mapToMenuItems(data.menu, data.refID._id, categoryIdMap));
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -129,7 +149,7 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
     <>
       <div className="relative w-full h-64 md:h-80 bg-blue-100 dark:bg-blue-900">
         <Image
-          src={restaurant.image || "/placeholder.svg?height=400&width=1200"}
+          src={restaurant.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
           alt={restaurant.name}
           fill
           className="object-cover opacity-40"
@@ -146,7 +166,7 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to restaurants
             </Link>
-            <h1 className="text-4xl font-bold mb-2 text-white drop-shadow-sm">
+            <h1 className="text-4xl font-bold mb-2 text-black drop-shadow-sm">
               {restaurant.name}
             </h1>
           </div>
@@ -156,7 +176,7 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between gap-6 mb-10">
           <div className="max-w-2xl">
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
+            <p className="text-lg text-gray-700 mb-4">
               {restaurant.description}
             </p>
             <div className="flex flex-wrap gap-6 text-sm">
