@@ -15,6 +15,7 @@ import { getUserById } from "@/lib/api/userApi";
 import { USER_CATEGORIES } from "@/constants/userConstants";
 import { MenuCategory, MenuItem, Restaurant } from "@/types/Restaurant";
 import { mapToRestaurant } from "../page";
+import { getMenuItemByRestaurantId } from "@/lib/api/menuItemApi";
 
 export const mapToMenuCategories = (
   menu: any[],
@@ -48,7 +49,7 @@ export const mapToMenuItems = (
     name: menuItem.name, // Map the name field
     description: menuItem.description, // Map the description field
     price: menuItem.price, // Map the price field
-    image: menuItem.image || undefined, // Map the image field (optional)
+    image: menuItem.imageUrl || undefined, // Map the image field (optional)
     isPopular: menuItem.isPopular || false, // Map the isPopular field (optional),
     status: menuItem.isAvailable ? "active" : "inactive", // Map the status field (optional)
   }));
@@ -91,26 +92,18 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
         setRestaurant({
           id: data.refID._id,
           name: data.refID.name,
-          image: undefined, // Placeholder for image
+          image: undefined,
           description: `Located at ${data.refID.address.street}, offering delicious meals.`,
-          cuisineType: "", // Placeholder for cuisine type
-          rating: 0, // Placeholder for rating
-          reviewCount: 0, // Placeholder for review count
-          deliveryTime: 0, // Placeholder for delivery time
-          deliveryFee: 0, // Placeholder for delivery fee
-          minOrder: 0, // Placeholder for minimum order
-          distance: 0, // Placeholder for distance
-          isOpen: true, // Assuming the restaurant is open
-          isNew: false, // Assuming the restaurant is not new
+          cuisineType: "",
+          rating: 0,
+          reviewCount: 0,
+          deliveryTime: 0,
+          deliveryFee: 0,
+          minOrder: 0,
+          distance: 0,
+          isOpen: true,
+          isNew: false,
         });
-
-        // Uncomment and map menu data if available in the future
-        // const menuCategories = mapToMenuCategories(data.menu, data.refID._id);
-        // setMenuCategories(menuCategories);
-        // const categoryIdMap = Object.fromEntries(
-        //   menuCategories.map((category) => [category.name, category.id])
-        // );
-        // setMenuItems(mapToMenuItems(data.menu, data.refID._id, categoryIdMap));
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -121,12 +114,55 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
     }
   }, [params.id]);
 
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        if (!params.id) return;
+        const response: any = await getMenuItemByRestaurantId(params.id);
+        if (response.data) {
+          // Map API response to menu categories
+          const menuCategories = mapToMenuCategories(response.data, params.id);
+          setMenuCategories(menuCategories);
+
+          // Create categoryId map
+          const categoryIdMap = Object.fromEntries(
+            menuCategories.map((category) => [category.name, category.id])
+          );
+
+          // Map API response to menu items
+          const mappedMenuItems = mapToMenuItems(
+            response.data,
+            params.id,
+            categoryIdMap
+          );
+          setMenuItems(mappedMenuItems);
+
+          console.log("Mapped menu items:", mappedMenuItems);
+        }
+      } catch (err: any) {
+        if (err.response) {
+          const { data } = err.response;
+          console.log(
+            data && data.message
+              ? `MenuItem Details Fetching Failed: ${data.message}`
+              : "An unexpected error occurred. Please try again."
+          );
+        } else {
+          console.log(
+            "An unexpected error occurred. Please check your network and try again."
+          );
+        }
+      }
+    };
+
+    if (params.id) fetchMenuItems();
+  }, [params.id]);
   // Filter menu items by restaurant and category
-  const filteredItems = menuItems.filter(
-    (item) =>
-      item.restaurantId === restaurant.id &&
-      (selectedCategory === "all" || item.categoryId === selectedCategory)
-  );
+  // Filter menu items by category
+  const filteredItems =
+    selectedCategory === "all"
+      ? menuItems
+      : menuItems.filter((item) => item.categoryId === selectedCategory);
 
   const handleAddToCart = (item: any) => {
     addToCart({
@@ -149,7 +185,10 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
     <>
       <div className="relative w-full h-64 md:h-80 bg-blue-100 dark:bg-blue-900">
         <Image
-          src={restaurant.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
+          src={
+            restaurant.image ||
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          }
           alt={restaurant.name}
           fill
           className="object-cover opacity-40"
@@ -262,47 +301,59 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
           </TabsList>
 
           <TabsContent value={selectedCategory} className="mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.map((item) => (
-                <Card
-                  key={item.id}
-                  className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="relative h-48 w-full overflow-hidden">
-                    <Image
-                      src={
-                        item.image || "/placeholder.svg?height=200&width=300"
-                      }
-                      alt={item.name}
-                      fill
-                      className="object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                    {item.isPopular && (
-                      <Badge className="absolute top-2 right-2 bg-primary hover:bg-primary">
-                        Popular
-                      </Badge>
-                    )}
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-lg">{item.name}</h3>
-                      <span className="font-medium text-primary">
-                        ${item.price.toFixed(2)}
-                      </span>
+            {filteredItems.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredItems.map((menuItem) => (
+                  <Card
+                    key={menuItem.id}
+                    className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <Image
+                        src={
+                          menuItem.image ||
+                          "/placeholder.svg?height=200&width=300"
+                        }
+                        alt={menuItem.name}
+                        fill
+                        className="object-cover transition-transform duration-300 hover:scale-105"
+                        priority
+                      />
+                      {menuItem.isPopular && (
+                        <Badge className="absolute top-2 right-2 bg-primary hover:bg-primary">
+                          Popular
+                        </Badge>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">
-                      {item.description}
-                    </p>
-                    <Button
-                      onClick={() => handleAddToCart(item)}
-                      className="w-full"
-                    >
-                      Add to Cart
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold text-lg">
+                          {menuItem.name}
+                        </h3>
+                        <span className="font-medium text-primary">
+                          ${menuItem.price.toFixed(2)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mb-4 line-clamp-2">
+                        {menuItem.description}
+                      </p>
+                      <Button
+                        // onClick={() => handleAddToCart(menuItem)}
+                        className="w-full"
+                      >
+                        Add to Cart
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <p className="text-muted-foreground text-lg">
+                  No menu items found in this category.
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
