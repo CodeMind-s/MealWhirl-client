@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link"
 import Image from "next/image"
-import { Clock, MapPin, Phone, Settings, ShoppingBag, User, Eye, EyeOff } from "lucide-react"
+import { Clock, MapPin, Phone, Settings, ShoppingBag, User, Eye, EyeOff, Delete, Trash, Trash2, CheckCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +17,7 @@ import { orders } from "@/lib/data"
 import { useAuth } from "@/contexts/auth-context"
 import { updateUserById } from "@/lib/api/userApi";
 import { useToast } from "@/hooks/use-toast";
+import { deleteNotification, getNotificationsByUser, markNotificationsAsRead } from "@/lib/api/notificationApi";
 
 export default function ProfilePage() {
   const { logout } = useAuth();
@@ -38,6 +39,7 @@ export default function ProfilePage() {
   });
   const [errors, setErrors] = useState<{ email?: string; password?: string; phone?: string; street?: string }>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; phone?: string; street?: string } = {};
@@ -110,6 +112,79 @@ export default function ProfilePage() {
   }) : "";
 
   const recentOrders = orders.slice(0, 3)
+
+  useEffect(() => {
+    if (user && notifications.length === 0) {
+      getAllNotifications(user._id);
+    }
+  }, [user, notifications]);
+
+  const getAllNotifications = async (userId: string): Promise<any> => {
+    try {
+      const response = await getNotificationsByUser(userId);
+      if (response.status === 200) {
+        const sortedNotifications = (response.data as any[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setNotifications(sortedNotifications);
+      } else {
+        throw new Error("Failed to fetch notifications");
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch notifications.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    try {
+      // Call the API to delete the notification
+      await deleteNotification(notificationId);
+      // await deleteNotification(notificationId);
+      setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
+      toast({
+        title: "Notification Deleted",
+        description: "The notification has been deleted successfully.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the notification.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await markNotificationsAsRead(notificationId, { isRead: true });
+      toast({
+        title: "Notification Marked as Read",
+        description: `Marked notification as read: ${notificationId}`,
+        variant: "default",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark the notification as read.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // console.log(`notifications => `, notifications);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -198,7 +273,7 @@ export default function ProfilePage() {
           <Tabs defaultValue="orders" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="orders">Recent Orders</TabsTrigger>
-              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
             <TabsContent value="orders" className="mt-6">
               <div className="flex justify-between items-center mb-4">
@@ -252,95 +327,51 @@ export default function ProfilePage() {
                 ))}
               </div>
             </TabsContent>
-            <TabsContent value="account" className="mt-6">
+            <TabsContent value="notifications" className="mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Account Information</CardTitle>
+                  <CardTitle>Notifications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-medium flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Personal Information
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500">Name</p>
-                        <p>John Doe</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Email</p>
-                        <p>john.doe@example.com</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Phone</p>
-                        <p>+1 (555) 123-4567</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Date of Birth</p>
-                        <p>January 1, 1990</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="font-medium flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Addresses
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium">Home</p>
-                            <p className="text-sm text-gray-500">
-                              123 Main St
-                              <br />
-                              Anytown, CA 12345
-                            </p>
-                          </div>
-                          <Badge>Default</Badge>
+                  {notifications?.length > 0 ? (
+                    notifications.map((notification: { title: string; message: string; isRead: boolean, _id: string }, index: number) => (
+                      <div
+                        key={index}
+                        className={`border rounded-lg p-4 flex justify-between items-start ${notification.isRead ? 'bg-gray-50' : 'bg-blue-100'}`}
+                      >
+                        <div>
+                          <p className="font-medium">{notification.title}</p>
+                          <p className="text-sm text-gray-500">{notification.message}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {!notification.isRead && (
+                            <Button
+                              variant="outline"
+                              className="hover:text-white"
+                              onClick={() => {
+                                handleMarkAsRead(notification._id);
+                                setNotifications((prev) =>
+                                  prev.map((n) =>
+                                    n._id === notification._id ? { ...n, read: true } : n
+                                  )
+                                );
+                              }}
+                            >
+                              <CheckCheck className="h-5 w-5" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleDeleteNotification(notification._id)}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium">Work</p>
-                            <p className="text-sm text-gray-500">
-                              456 Office Blvd
-                              <br />
-                              Anytown, CA 12345
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="outline" className="w-full">
-                        Add New Address
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <h3 className="font-medium flex items-center gap-2">
-                      <ShoppingBag className="h-4 w-4" />
-                      Payment Methods
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium">Visa ending in 4242</p>
-                            <p className="text-sm text-gray-500">Expires 12/25</p>
-                          </div>
-                          <Badge>Default</Badge>
-                        </div>
-                      </div>
-                      <Button variant="outline" className="w-full">
-                        Add Payment Method
-                      </Button>
-                    </div>
-                  </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No notifications available.</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
