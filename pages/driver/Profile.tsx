@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Camera, Car, Edit, Save, Star, TrendingUp, Trophy, Truck } from 'lucide-react'
 import { PageHeader } from "@/components/super/page-header";
+import { updateUserById } from "@/lib/api/userApi";
 
 interface ProfileProps {
     onBack: () => void
@@ -21,18 +22,20 @@ interface ProfileProps {
 
 export default function Profile() {
     const { user } = useAuth();
+    // console.log(`user => `, user);
     const { toast } = useToast()
     const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
         email: user?.email || "driver@example.com",
+        password: "*********",
         phone: user?.phone || "(555) 123-4567",
-        address: "123 Main St, New York, NY 10001",
-        vehicleModel: "Toyota Prius",
-        vehicleColor: "Silver",
-        vehiclePlate: "ABC-1234",
-    })
+        refID: {
+            vehicleType: user?.refID?.vehicleType || "Car",
+            licenseNumber: user?.refID?.licenseNumber || "ABC123456",
+            availabilityStatus: user?.refID?.availabilityStatus || "AVAILABLE",
+        },
+    });
 
-    // Mock driver statistics
     const driverStats = {
         deliveries: 248,
         rating: 4.8,
@@ -40,14 +43,53 @@ export default function Profile() {
         cancelRate: 1.2,
         earnings: 3245.75,
         topBadges: ["Speedy", "Reliable", "Friendly"],
-    }
+    };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-    }
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        if (name.includes("refID.")) {
+            const refIDField = name.split(".")[1];
+            setFormData((prev) => ({
+                ...prev,
+                refID: {
+                    ...prev.refID,
+                    [refIDField]: value,
+                },
+            }));
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
+    };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        console.log(`formData => `, formData);
+        try {
+            if (!user) {
+                toast({
+                    title: "Error",
+                    description: "User information is not available.",
+                    variant: "destructive",
+                });
+                return;
+            }
+            const updatedUser = await updateUserById(user._id, formData);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            toast({
+                title: "Profile Updated",
+                description: "Your profile has been updated successfully.",
+                variant: "default",
+            });
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } catch (error) {
+            console.error("Error updating user:", error);
+            toast({
+                title: "Update Failed",
+                description: "There was an error updating your profile. Please try again.",
+                variant: "destructive",
+            });
+        }
         setIsEditing(false)
         toast({
             title: "Profile updated",
@@ -70,7 +112,7 @@ export default function Profile() {
                 description="View and manage your profile information"
             // onClick={onBack}
             />
-
+            <br />
             <div className="grid gap-6 md:grid-cols-12">
                 {/* Left column - Profile info */}
                 <div className="md:col-span-8 space-y-6">
@@ -120,7 +162,7 @@ export default function Profile() {
                             </div>
                         </CardHeader>
                         <CardContent className="pt-6">
-                            <div className="grid gap-6 sm:grid-cols-2">
+                            <div className="grid gap-6 sm:grid-cols-3">
                                 <div className="space-y-2">
                                     <Label htmlFor="phone">Phone Number</Label>
                                     <Input
@@ -132,14 +174,66 @@ export default function Profile() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="address">Address</Label>
+                                    <Label htmlFor="email">Email</Label>
                                     <Input
-                                        id="address"
-                                        name="address"
-                                        value={formData.address}
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
                                         onChange={handleInputChange}
                                         disabled={!isEditing}
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="password">Password</Label>
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="refID.vehicleType">Vehicle Type</Label>
+                                    <select
+                                        id="refID.vehicleType"
+                                        name="refID.vehicleType"
+                                        value={formData.refID.vehicleType}
+                                        onChange={handleInputChange}
+                                        disabled={!isEditing}
+                                        className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    >
+                                        <option value="Car">Car</option>
+                                        <option value="Bike">Bike</option>
+                                        <option value="Bicycle">Bicycle</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="refID.licenseNumber">License Number</Label>
+                                    <Input
+                                        id="refID.licenseNumber"
+                                        name="refID.licenseNumber"
+                                        value={formData.refID.licenseNumber}
+                                        onChange={handleInputChange}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="refID.availabilityStatus">Availability Status</Label>
+                                    <select
+                                        id="refID.availabilityStatus"
+                                        name="refID.availabilityStatus"
+                                        value={formData.refID.availabilityStatus}
+                                        onChange={handleInputChange}
+                                        disabled={!isEditing}
+                                        className="block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    >
+                                        <option value="AVAILABLE">AVAILABLE</option>
+                                        <option value="UNAVAILABLE">UNAVAILABLE</option>
+                                    </select>
                                 </div>
                             </div>
                         </CardContent>
@@ -148,50 +242,6 @@ export default function Profile() {
                                 <Button onClick={handleSave} className="ml-auto">Save Changes</Button>
                             </CardFooter>
                         )}
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
-                                <Car className="h-5 w-5 mr-2" />
-                                Vehicle Information
-                            </CardTitle>
-                            <CardDescription>Details about your delivery vehicle</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-6 sm:grid-cols-3">
-                                <div className="space-y-2">
-                                    <Label htmlFor="vehicleModel">Vehicle Model</Label>
-                                    <Input
-                                        id="vehicleModel"
-                                        name="vehicleModel"
-                                        value={formData.vehicleModel}
-                                        onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="vehicleColor">Vehicle Color</Label>
-                                    <Input
-                                        id="vehicleColor"
-                                        name="vehicleColor"
-                                        value={formData.vehicleColor}
-                                        onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="vehiclePlate">License Plate</Label>
-                                    <Input
-                                        id="vehiclePlate"
-                                        name="vehiclePlate"
-                                        value={formData.vehiclePlate}
-                                        onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                    />
-                                </div>
-                            </div>
-                        </CardContent>
                     </Card>
                 </div>
 
@@ -251,38 +301,6 @@ export default function Profile() {
                                         {badge}
                                     </Badge>
                                 ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Account Settings</CardTitle>
-                            <CardDescription>Manage your account preferences</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="push-notifications">Push Notifications</Label>
-                                    <p className="text-sm text-muted-foreground">Receive order alerts</p>
-                                </div>
-                                <Switch id="push-notifications" defaultChecked />
-                            </div>
-                            <Separator />
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="email-notifications">Email Notifications</Label>
-                                    <p className="text-sm text-muted-foreground">Receive updates via email</p>
-                                </div>
-                                <Switch id="email-notifications" defaultChecked />
-                            </div>
-                            <Separator />
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="dark-mode">Dark Mode</Label>
-                                    <p className="text-sm text-muted-foreground">Use dark theme</p>
-                                </div>
-                                <Switch id="dark-mode" />
                             </div>
                         </CardContent>
                     </Card>
