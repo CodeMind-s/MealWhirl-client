@@ -195,7 +195,6 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
             title: "Notification Error",
             description: "Failed to send SMS notification to the customer.",
           });
-
         }
 
         // Create notification for the user
