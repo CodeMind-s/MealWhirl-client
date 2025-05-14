@@ -177,7 +177,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           message: smsMessages[status],
         };
         try {
-          // await sendSMSNotification(smsData);
+          await sendSMSNotification(smsData);
           toast({
             title: "Notification Sent",
             description: "Customer has been notified via SMS.",
