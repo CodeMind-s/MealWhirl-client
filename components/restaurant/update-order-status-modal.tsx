@@ -14,13 +14,15 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
+import { createNotification, sendSMSNotification } from "@/lib/api/notificationApi"; // Import the SMS notification function
 import { updateOrderStatus, assignDeliveryPerson } from "@/lib/api/orderApi"; // Import the update order status function
+import { toast } from "@/hooks/use-toast"
 
 interface UpdateOrderStatusModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   orderId: string
+  userId: string
   currentStatus: string
   onStatusUpdate: (orderId: string, newStatus: string) => void
 }
@@ -40,6 +42,7 @@ export function UpdateOrderStatusModal({
   open,
   onOpenChange,
   orderId,
+  userId,
   currentStatus,
   onStatusUpdate,
 }: UpdateOrderStatusModalProps) {
@@ -58,7 +61,7 @@ export function UpdateOrderStatusModal({
 
         if (status === "REDY_FOR_PICKUP") {
           const assignData = {
-            deliveryPersonId: "67fbb71ad2df7230c45110we", // Replace with actual delivery person ID logic
+            deliveryPersonId: "682492559ef8f8a96b53a194", // Replace with actual delivery person ID logic
           };
           try {
             await assignDeliveryPerson(orderId, assignData);
@@ -68,12 +71,32 @@ export function UpdateOrderStatusModal({
           }
         }
 
+        // Create notification for the delivery person
+        if (status === "REDY_FOR_PICKUP") {
+          const driverNotification = {
+            userId: "682492559ef8f8a96b53a194", // Replace with actual delivery person ID logic
+            title: "New Delivery Assignment",
+            message: `You have been assigned a new delivery for order ID: ${orderId}. Please proceed to pick it up.`,
+          };
+
+          try {
+            await createNotification(driverNotification);
+            console.log("Driver notification sent successfully.");
+          } catch (driverNotificationError) {
+            console.error("Error sending driver notification:", driverNotificationError);
+            toast({
+              variant: "destructive",
+              title: "Notification Error",
+              description: "Failed to send notification to the delivery person.",
+            });
+          }
+        }
+
         // Send SMS notification to the customer
         const smsMessages = {
-          preparing: "Your order is being prepared.",
-          ready: "Your order is ready for pickup.",
-          completed: "Your order has been completed. Enjoy your meal!",
-          cancelled: "Your order has been cancelled. If you have any questions, please contact support.",
+          PREPARING: "MealWhirl\n\nYour order is being prepared.",
+          REDY_FOR_PICKUP: "MealWhirl\n\nYour order is ready for pickup.",
+          CANCELLED: "MealWhirl\n\nYour order has been cancelled. If you have any questions, please contact support.",
         };
 
         const smsData = {
@@ -88,9 +111,11 @@ export function UpdateOrderStatusModal({
           console.error("Error sending SMS notification:", smsError);
         }
 
+        // Create notification for the u
+
         // Call the onStatusUpdate callback
         onStatusUpdate(orderId, status);
-        window.location.reload();
+        // window.location.reload();
       }
     } catch (error: any) {
       if (error.response) {
