@@ -31,16 +31,26 @@ export interface MenuCategory {
   name: string;
 }
 
+// export interface CartItem {
+//   id: string;
+//   name: string;
+//   price: number;
+//   quantity: number;
+//   restaurantId: string;
+//   restaurantName: string;
+//   image?: string;
+// }
 export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
+  userId: string;
   restaurantId: string;
-  restaurantName: string;
-  image?: string;
+  item: {
+    menuItemId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    imageUrl?: string;
+  };
 }
-
 export interface Order {
   id: string;
   orderNumber: string;
