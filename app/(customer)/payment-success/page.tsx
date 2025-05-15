@@ -45,7 +45,7 @@ export default function PaymentSuccess({
         deliveryFee: order.deliveryFee,
         paymentMethod: "CARD",
         paymentStatus: "PENDING",
-        paymentGatewayTransactionId: "",
+        paymentGatewayTransactionId: payment_intent,
         description: "Payment for Food Order",
       };
 
