@@ -23,6 +23,8 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { useOrders } from "@/contexts/orders-context";
 import { useRouter } from "next/navigation";
+import { getUserById } from "@/lib/api/userApi"; // Assuming you have a function to get user by ID
+import { set } from "date-fns";
 
 interface CartItem {
   id: string;
@@ -46,6 +48,8 @@ export default function CartPage() {
   const { user } = useAuth();
   const { setOrderData } = useOrders(); // Assuming you have a method to set order data in your context
   const router = useRouter(); // Assuming you are using Next.js router
+  const [restaurant, setRestaurant] = useState<any>(null); // Assuming you have a restaurant state
+  const [restaurantId, setRestaurantId] = useState<string>("");
 
   useEffect(() => {
     if (user) {
@@ -54,6 +58,7 @@ export default function CartPage() {
     }
   }, [user]);
 
+  
   // Fetch cart on mount
   useEffect(() => {
     const fetchCart = async () => {
@@ -72,6 +77,7 @@ export default function CartPage() {
         // Flatten itemsByRestaurant into a CartItem array
         const cartItems = data.itemsByRestaurant.flatMap((restaurant) =>
           restaurant.items.map((item: any) => ({
+            
             id: item.menuItemId, // Use menuItemId as ID
             restaurantId: restaurant.restaurantId,
             restaurantName:
@@ -81,10 +87,12 @@ export default function CartPage() {
             price: item.price,
             quantity: item.quantity,
             totalItemPrice: item.totalItemPrice,
-            image: item.image, // Optional, assume included if needed
+            image: item.imageUrl, // Optional, assume included if needed
           }))
         );
         setCart(cartItems);
+        setRestaurantId(data.itemsByRestaurant[0].restaurantId); // Assuming the first restaurant ID is the active one
+        
         setCartId(data._id); // Assuming cartId is part of the response
       } catch (error) {
         console.error("Failed to fetch cart:", error);
@@ -98,6 +106,24 @@ export default function CartPage() {
       fetchCart();
     }
   }, [userId]);
+
+  useEffect(() => {
+  const fetchRestaurantData = async () => {
+    try {
+      const response: any = await getUserById(restaurantId);
+
+      if (response) {
+        setRestaurant(response);
+      }
+    } catch (error) {
+      console.log("Error fetching restaurant data:", error);
+    }
+    };
+
+    if (restaurantId) {
+      fetchRestaurantData();
+    }
+  }, [restaurantId]);
 
   // Calculate totals
   const cartSubtotal = cart.reduce(
@@ -138,7 +164,7 @@ export default function CartPage() {
           price: item.price,
           quantity: item.quantity,
           totalItemPrice: item.totalItemPrice,
-          image: item.image,
+          image: item.imageUrl,
         }))
       );
       setCart(cartItems);
@@ -178,7 +204,7 @@ export default function CartPage() {
           price: item.price,
           quantity: item.quantity,
           totalItemPrice: item.totalItemPrice,
-          image: item.image,
+          image: item.imageUrl,
         }))
       );
       setCart(cartItems);
@@ -334,18 +360,18 @@ export default function CartPage() {
                       <path d="M8 5H7a2 2 0 0 0-2 2v12" />
                     </svg>
                   </div> */}
-                    {restaurantName}
+                    {restaurant?.refID?.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-4">
-                  {items.map((item) => (
+                  {items.map((item: any) => (
                     <div
                       key={item.id}
                       className="flex gap-4 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                     >
                       <div className="relative h-20 w-20 flex-shrink-0 rounded-md overflow-hidden">
                         <Image
-                          src={item.imageUrl || "/placeholder.png"}
+                          src={item.image || "/placeholder.png"}
                           alt={item.name}
                           fill
                           className="object-cover"
