@@ -16,6 +16,9 @@ import { USER_CATEGORIES } from "@/constants/userConstants";
 import { MenuCategory, MenuItem, Restaurant } from "@/types/Restaurant";
 import { mapToRestaurant } from "../page";
 import { getMenuItemByRestaurantId } from "@/lib/api/menuItemApi";
+import { useAuth } from "@/contexts/auth-context";
+import { ToastAction } from "@/components/ui/toast";
+import { addToCart } from "@/lib/api/cartApi";
 
 export const mapToMenuCategories = (
   menu: any[],
@@ -57,7 +60,7 @@ export const mapToMenuItems = (
 
 export default function RestaurantPage({ params }: { params: { id: string } }) {
   const { toast } = useToast();
-  const { addToCart } = useCart();
+  // const { addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [restaurant, setRestaurant] = useState<Restaurant>({
     id: "",
@@ -76,6 +79,14 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
   });
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setUserId(user._id);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchRestaurantData = async () => {
@@ -164,21 +175,78 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
       ? menuItems
       : menuItems.filter((item) => item.categoryId === selectedCategory);
 
-  const handleAddToCart = (item: any) => {
-    addToCart({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      quantity: 1,
-      restaurantId: restaurant.id,
-      restaurantName: restaurant.name,
-      image: item.image,
-    });
+  // const handleAddToCart = (menuItem: MenuItem) => {
+  //   const cartItem: any = {
+  //     userId: userId, 
+  //     restaurantId: menuItem.restaurantId,
+  //     item: {
+  //       menuItemId: menuItem.id,
+  //       name: menuItem.name,
+  //       price: menuItem.price,
+  //       quantity: 1,
+  //       imageUrl: menuItem.image,
+  //     },
+  //   };
 
-    toast({
-      title: "Added to cart",
-      description: `${item.name} has been added to your cart.`,
-    });
+  //   addToCart(cartItem);
+
+  //   toast({
+  //     title: "Added to cart",
+  //     description: `${menuItem.name} has been added to your cart.`,
+  //   });
+  // };
+
+  const handleAddToCart = async (menuItem: MenuItem) => {
+    try {
+      const cartItem: any = {
+            userId: userId, 
+            restaurantId: menuItem.restaurantId,
+            item: {
+              menuItemId: menuItem.id,
+              name: menuItem.name,
+              price: menuItem.price,
+              quantity: 1,
+              imageUrl: menuItem.image,
+            },
+          };
+
+      const cartResponse: any = await addToCart(cartItem);
+      if (cartResponse) {
+        toast({
+          title: "Success",
+          description: "Added to Cart Successfully!",
+          variant: "default",
+        });
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const { data } = error.response;
+
+        if (data && data.message) {
+          toast({
+            title: "Error",
+            description: `Addition to Cart Failed: ${data.message}`,
+            variant: "destructive",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "An unexpected error occurred. Please try again.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description:
+            "An unexpected error occurred. Please check your network and try again.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
+    }
   };
 
   return (
@@ -338,7 +406,7 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
                         {menuItem.description}
                       </p>
                       <Button
-                        // onClick={() => handleAddToCart(menuItem)}
+                        onClick={() => handleAddToCart(menuItem)}
                         className="w-full"
                       >
                         Add to Cart
