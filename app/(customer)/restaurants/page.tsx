@@ -13,90 +13,95 @@ import {
 } from "@/components/ui/select";
 import RestaurantCard from "@/components/restaurant-card";
 import { useEffect, useState } from "react";
-import { getUsersByCategory } from "@/lib/api/userApi";
+// import { getUsersByCategory } from "@/lib/api/userApi";
 import { USER_CATEGORIES } from "@/constants/userConstants";
-import { Restaurant } from "@/types/Restaurant";
+import { Restaurant as RestaurantType } from "@/types/Restaurant";
+import { getAllRestaurants } from "@/lib/api/userApi";
 
-export const mapToRestaurant = (data: any[]): Restaurant[] => {
-  return data.map((restaurant) => ({
-    id: restaurant.identifier,
-    name: restaurant.name,
-    image: restaurant.profilePicture || undefined,
-    description: `${restaurant.address.street}, ${restaurant.address.city}`,
-    cuisineType: "Unknown", // Replace with actual cuisine type if available
-    rating: restaurant.ratings.average,
-    reviewCount: restaurant.ratings.count,
-    deliveryTime: Math.floor(Math.random() * (60 - 20 + 1)) + 20, // Random delivery time between 20 and 60 minutes
-    deliveryFee: parseFloat((Math.random() * (10 - 2) + 2).toFixed(2)), // Random delivery fee between $2.00 and $10.00
-    minOrder: Math.floor(Math.random() * (50 - 10 + 1)) + 10, // Random minimum order between $10 and $50
-    distance: parseFloat((Math.random() * (20 - 1) + 1).toFixed(1)), // Random distance between 1 and 20 miles
-    isOpen: restaurant.accountStatus === "active",
-    isNew:
-      new Date().getTime() - new Date(restaurant.createdAt).getTime() <
-      30 * 24 * 60 * 60 * 1000, // Check if created within the last 30 days
-  }));
-};
+// Define the RestaurantCard type for this page to match the expected props
+interface RestaurantCardType {
+  id: string;
+  name: string;
+  description: string;
+  cuisineType: string;
+  rating: number;
+  imageUrl: string;
+  email: string;
+  phone: string;
+  type: string;
+  isAdmin: boolean;
+  reviewCount: number;
+  deliveryTime: number;
+  deliveryFee: number;
+  distance: string;
+  isOpen: boolean;
+  refID: {
+    address: {
+      street: string;
+      latitude: number;
+      longitude: number;
+    };
+    id: string;
+    name: string;
+    __v: number;
+  };
+  createdAt: string;
+  __v: number;
+}
 
 export default function RestaurantsPage() {
-  // const [restaurants, setRestaurants] = useState<any>([]);
-  // const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   const fetchRestaurantData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const data = await getUsersByCategory(USER_CATEGORIES.RESTAURANT);
-  //       setRestaurants(mapToRestaurant(data));
-  //     } catch (error) {
-  //       console.error("Error fetching user data:", error);
-  //     }
-  //   };
-
-  //   fetchRestaurantData();
-  // }, []);
-
-   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-    const fetchRestaurants = async () => {
-      try {
-        const data = await getAllRestaurants();
-        const transformedData = (data as any[]).map((restaurant) => ({
-          id: restaurant._id || "default-id", // Default id
-          name: restaurant.refID?.name || "Default Restaurant", // Default name
-          description: "No description available",
-          cuisineType: "Various",
-          rating: 0,
-          imageUrl: "/default-restaurant.jpg", // Default image
-          email: restaurant.email || "dummyemail@example.com",
-          phone: restaurant.phone || "0000000000",
-          type: restaurant.type || "Restaurant",
-          isAdmin: restaurant.isAdmin || false,
-          reviewCount: 0,
-          deliveryTime: 30,
-          deliveryFee: 0,
-          distance: "2 km",
-          isOpen: true,
-          refID: restaurant.refID || {
-            address: {
-              street: "123 Main St",
-              latitude: 40.7128,
-              longitude: -74.006,
-            },
-            id: "default-ref-id",
-            name: "Default Ref Name",
-            __v: 0,
+  const [restaurants, setRestaurants] = useState<RestaurantCardType[]>([]);
+  const dummyImages = [
+    "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "/placeholder-logo.png",
+    "/placeholder-user.jpg",
+    "/images/restaurant1.jpg",
+    "/images/restaurant2.jpg",
+    "/images/restaurant3.jpg",
+    "/images/restaurant4.jpg",
+  ];
+  const fetchRestaurants = async () => {
+    try {
+      const data = await getAllRestaurants();
+      const transformedData = (data as any[]).map((restaurant, idx) => ({
+        id: restaurant._id || "default-id", // Default id
+        name: restaurant.refID?.name || "Default Restaurant", // Default name
+        description: "No description available",
+        cuisineType: "Various",
+        rating: 23,
+        imageUrl: dummyImages[idx % dummyImages.length], // Assign dummy image to 'image' property
+        email: restaurant.email || "dummyemail@example.com",
+        phone: restaurant.phone || "0000000000",
+        type: restaurant.type || "Restaurant",
+        isAdmin: restaurant.isAdmin || false,
+        reviewCount: 100,
+        deliveryTime: 30,
+        deliveryFee: 15,
+        distance: "2 km",
+        isOpen: true,
+        refID: restaurant.refID || {
+          address: {
+            street: "123 Main St",
+            latitude: 40.7128,
+            longitude: -74.006,
           },
-          createdAt: restaurant.createdAt || new Date().toISOString(),
-          __v: restaurant.__v || 0,
-        }));
-        setRestaurants(transformedData);
-      } catch (error) {
-        console.error("Error fetching restaurants:", error);
-      }
-    };
-  
-    useEffect(() => {
-      fetchRestaurants();
-    }, []);
+          id: "default-ref-id",
+          name: "Default Ref Name",
+          __v: 0,
+        },
+        createdAt: restaurant.createdAt || new Date().toISOString(),
+        __v: restaurant.__v || 0,
+      }));
+      setRestaurants(transformedData);
+    } catch (error) {
+      console.error("Error fetching restaurants:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -162,9 +167,9 @@ export default function RestaurantsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {restaurants.slice(0, 8).map((restaurant) => (
-                      <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-                    ))}
+        {restaurants.slice(0, 8).map((restaurant) => (
+          <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+        ))}
       </div>
     </div>
   );
