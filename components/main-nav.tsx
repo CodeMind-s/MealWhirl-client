@@ -99,11 +99,11 @@ export default function MainNav() {
               <Link href="/restaurants" className="text-sm font-medium hover:text-primary transition-colors">
                 Restaurants
               </Link>
-              <Link href="/profile" className="text-sm font-medium hover:text-primary transition-colors">
-                My Account
-              </Link>
               <Link href="/profile/orders" className="text-sm font-medium hover:text-primary transition-colors">
-                My Orders
+                Orders
+              </Link>
+              <Link href="/profile" className="text-sm font-medium hover:text-primary transition-colors">
+                Account
               </Link>
             </nav>
           )
