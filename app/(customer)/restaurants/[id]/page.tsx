@@ -14,7 +14,6 @@ import { useCart } from "@/lib/cart-context";
 import { getUserById } from "@/lib/api/userApi";
 import { USER_CATEGORIES } from "@/constants/userConstants";
 import { MenuCategory, MenuItem, Restaurant } from "@/types/Restaurant";
-import { mapToRestaurant } from "../page";
 import { getMenuItemByRestaurantId } from "@/lib/api/menuItemApi";
 import { useAuth } from "@/contexts/auth-context";
 import { ToastAction } from "@/components/ui/toast";
@@ -199,16 +198,16 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
   const handleAddToCart = async (menuItem: MenuItem) => {
     try {
       const cartItem: any = {
-            userId: userId, 
-            restaurantId: menuItem.restaurantId,
-            item: {
-              menuItemId: menuItem.id,
-              name: menuItem.name,
-              price: menuItem.price,
-              quantity: 1,
-              imageUrl: menuItem.image,
-            },
-          };
+        userId: userId,
+        restaurantId: menuItem.restaurantId,
+        item: {
+          menuItemId: menuItem.id,
+          name: menuItem.name,
+          price: menuItem.price,
+          quantity: 1,
+          imageUrl: menuItem.image,
+        },
+      };
 
       const cartResponse: any = await addToCart(cartItem);
       if (cartResponse) {
