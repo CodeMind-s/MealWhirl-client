@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, User } from "lucide-react";
+import { Save } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,161 +16,88 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
-import { addPayamentMethod, createUpdateResaurant } from "@/lib/api/restaurantApi";
+import { createUpdateResaurant } from "@/lib/api/restaurantApi";
 import { useRouter } from "next/navigation";
 import { USER_ACCOUNT_STATUS, USER_CATEGORIES } from "@/constants/userConstants";
-import { getUserByCategoryAndId } from "@/lib/api/userApi";
+import { updateUserById } from "@/lib/api/userApi";
+import { toast, useToast } from "@/hooks/use-toast";
+import { set } from "date-fns";
 
-export const validatePaymentMethods = (paymentMethods: any[]) => {
-  const errors: string[] = [];
-
-  paymentMethods.forEach((method, index) => {
-    if (!method.cardNumber || !/^\d{16}$/.test(method.cardNumber)) {
-      errors.push(
-        `Payment Method ${
-          index + 1
-        }: Card number is required and must be 16 digits.`
-      );
-    }
-    if (!method.cardHolderName || typeof method.cardHolderName !== "string") {
-      errors.push(
-        `Payment Method ${
-          index + 1
-        }: Card holder name is required and must be a string.`
-      );
-    }
-    if (
-      !method.expiryDate ||
-      !/^(0[1-9]|1[0-2])\/\d{2}$/.test(method.expiryDate)
-    ) {
-      errors.push(
-        `Payment Method ${
-          index + 1
-        }: Expiry date is required and must be in MM/YY format.`
-      );
-    }
-    if (!method.cvv || !/^\d{3,4}$/.test(method.cvv)) {
-      errors.push(
-        `Payment Method ${
-          index + 1
-        }: CVV is required and must be 3 or 4 digits.`
-      );
-    }
-    if (
-      method.isDefault !== undefined &&
-      typeof method.isDefault !== "boolean"
-    ) {
-      errors.push(`Payment Method ${index + 1}: isDefault must be a boolean.`);
-    }
-  });
-
-  return errors;
-};
-
-const DEFAULT_PAYMENT_METHOD = {
-  cardNumber: "",
-  cardHolderName: "",
-  expiryDate: "",
-  cvv: "",
-  isDefault: false,
+const DEFAULT_RESTAURANT_DATA = {
+  name: "",
+  email: "",
+  password: "",
+  phone: "",
+  address: {
+    street: "",
+    latitude: "",
+    longitude: "",
+  },
 };
 
 export function SettingsPage() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
-  const [restaurantData, setRestaurantData] = useState({
-    name: "",
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "",
-    },
-    location: {
-      latitude: "",
-      longitude: "",
-    },
-    registrationNumber: "",
-    owner: {
-      name: "",
-      email: "",
-      phone: "",
-      nationalId: "",
-    },
-    paymentMethods: [DEFAULT_PAYMENT_METHOD],
-  });
-  const [isValidPayment, setIsValidPayment] = useState(true);
-  const [savedPaymentMethods, setSavedPaymentMethods] = useState([]);
+  const [restaurantData, setRestaurantData] = useState(DEFAULT_RESTAURANT_DATA);
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Load user data from localStorage on mount
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
       try {
-        const userData = await getUserByCategoryAndId(USER_CATEGORIES.RESTAURANT, user?.identifier, null);
-        if (userData) {
-          setRestaurantData({
-            name: userData.name || "",
-            address: {
-              street: userData.address?.street || "",
-              city: userData.address?.city || "",
-              state: userData.address?.state || "",
-              zipCode: userData.address?.zipCode || "",
-              country: userData.address?.country || "",
-            },
-            location: {
-              latitude: userData.location?.latitude || "",
-              longitude: userData.location?.longitude || "",
-            },
-            registrationNumber: userData.registrationNumber || "",
-            owner: {
-              name: userData.owner?.name || "",
-              email: userData.owner?.email || "",
-              phone: userData.owner?.phone || "",
-              nationalId: userData.owner?.nationalId || "",
-            },
-            paymentMethods: [DEFAULT_PAYMENT_METHOD],
-          });
-          setSavedPaymentMethods([DEFAULT_PAYMENT_METHOD]);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+        const userData = JSON.parse(storedUser);
+        setRestaurantData({
+          name: userData.refID.name || "",
+          email: userData.email || "",
+          password: "",
+          phone: userData.phone || "",
+          address: {
+            street: userData?.refID?.address?.street || "",
+            latitude: userData?.refID?.address?.latitude || "",
+            longitude: userData?.refID?.address?.longitude || "",
+          },
+        });
+      } catch (e) {
+        // If parsing fails, keep defaults
       }
-    };
-  
-    if (user?.accountStatus !== USER_ACCOUNT_STATUS.CREATING) {
-      fetchData();
     }
-  }, [user]);
-
-  useEffect(() => {
-    const errors = validatePaymentMethods(restaurantData.paymentMethods);
-    setIsValidPayment(errors.length === 0);
-  }, [restaurantData.paymentMethods]);
-
-  const savePaymentData = async () => {
-    try {
-      const { data } = await addPayamentMethod({
-        ...restaurantData.paymentMethods[0],
-        identifier: user?.identifier,
-      });
-      setSavedPaymentMethods((prev) => [...prev, data._id]);
-    } catch (error) {
-      console.error("Error saving payment data:", error);
-    }
-  };
+  }, []);
 
   const saveResaurantData = async () => {
+    if (!user?._id) {
+      console.error("User ID is undefined.");
+      return;
+    }
+
+    // Construct payload in required format
+    const payload = {
+      email: restaurantData.email,
+      password: restaurantData.password,
+      phone: restaurantData.phone,
+      refID: {
+        name: restaurantData.name,
+        address: {
+          street: restaurantData.address.street,
+          latitude: parseFloat(restaurantData.address.latitude),
+          longitude: parseFloat(restaurantData.address.longitude),
+        },
+      },
+    };
+
     try {
-      await createUpdateResaurant({
-        ...restaurantData,
-        paymentMethods: savedPaymentMethods,
-        identifier: user?.identifier,
+      // console.log("Payload to backend =>", payload);
+      await updateUserById(user._id, payload); // Uncomment to send to backend
+      localStorage.setItem("user", JSON.stringify({ ...user, ...payload })); // Optionally update localStorage
+      toast({
+        title: "Success",
+        description: "Restaurant settings updated successfully.",
+        variant: "default",
       });
-      setUser((prev: User) => ({
-        ...prev,
-        accountStatus: USER_ACCOUNT_STATUS.ACTIVE,
-      }));
-      router.push("/restaurant/profile");
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error("Error saving restaurant data:", error);
     }
@@ -183,30 +110,13 @@ export function SettingsPage() {
     }));
   };
 
-  const handleNestedInputChange = (
-    field: string,
-    subField: string,
-    value: any
-  ) => {
+  const handleAddressChange = (subField: string, value: any) => {
     setRestaurantData((prev) => ({
       ...prev,
-      [field]: {
-        ...prev[field],
+      address: {
+        ...prev.address,
         [subField]: value,
       },
-    }));
-  };
-
-  const handlePaymentMethodChange = (
-    index: number,
-    field: string,
-    value: any
-  ) => {
-    const updatedPaymentMethods = [...restaurantData.paymentMethods];
-    updatedPaymentMethods[index][field] = value;
-    setRestaurantData((prev) => ({
-      ...prev,
-      paymentMethods: updatedPaymentMethods,
     }));
   };
 
@@ -220,9 +130,8 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-fit">
+        <TabsList className="grid grid-cols-1 w-fit">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
@@ -235,151 +144,79 @@ export function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Restaurant Name */}
-              <div className="space-y-2">
-                <Label htmlFor="restaurant-name">Restaurant Name</Label>
-                <Input
-                  id="restaurant-name"
-                  value={restaurantData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Enter restaurant name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="restaurant-name">Registration No</Label>
-                <Input
-                  id="restaurant-number"
-                  value={restaurantData.registrationNumber}
-                  onChange={(e) =>
-                    handleInputChange("registrationNumber", e.target.value)
-                  }
-                  placeholder="Enter registration number"
-                />
-              </div>
-
-              {/* Address */}
-              <div className="space-y-2">
-                <Label>Address</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Email */}
+              <div className="grid grid-cols-3 gap-4">
+                {/* Restaurant Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="restaurant-name">Restaurant Name</Label>
                   <Input
-                    placeholder="Street"
+                    id="restaurant-name"
+                    value={restaurantData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    placeholder="Enter restaurant name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={restaurantData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="Enter email"
+                  />
+                </div>
+                {/* Password */}
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={restaurantData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    placeholder="Enter password"
+                  />
+                </div>
+                {/* Phone */}
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={restaurantData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                {/* Address Street */}
+                <div className="space-y-2">
+                  <Label htmlFor="street">Street</Label>
+                  <Input
+                    id="street"
                     value={restaurantData.address.street}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "address",
-                        "street",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <Input
-                    placeholder="City"
-                    value={restaurantData.address.city}
-                    onChange={(e) =>
-                      handleNestedInputChange("address", "city", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="State"
-                    value={restaurantData.address.state}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "address",
-                        "state",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <Input
-                    placeholder="Zip Code"
-                    value={restaurantData.address.zipCode}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "address",
-                        "zipCode",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <Input
-                    placeholder="Country"
-                    value={restaurantData.address.country}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "address",
-                        "country",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => handleAddressChange("street", e.target.value)}
+                    placeholder="Enter street address"
                   />
                 </div>
-              </div>
-              {/* Location */}
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Latitude */}
+                <div className="space-y-2">
+                  <Label htmlFor="latitude">Latitude</Label>
                   <Input
+                    id="latitude"
                     type="number"
-                    placeholder="Latitude"
-                    value={restaurantData.location.latitude}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "location",
-                        "latitude",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Longitude"
-                    value={restaurantData.location.longitude}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "location",
-                        "longitude",
-                        e.target.value
-                      )
-                    }
+                    value={restaurantData.address.latitude}
+                    onChange={(e) => handleAddressChange("latitude", e.target.value)}
+                    placeholder="Enter latitude"
                   />
                 </div>
-              </div>
-              {/* Owner */}
-              <div className="space-y-2">
-                <Label>Owner</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Longitude */}
+                <div className="space-y-2">
+                  <Label htmlFor="longitude">Longitude</Label>
                   <Input
-                    placeholder="Name"
-                    value={restaurantData.owner.name}
-                    onChange={(e) =>
-                      handleNestedInputChange("owner", "name", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Email"
-                    value={restaurantData.owner.email}
-                    onChange={(e) =>
-                      handleNestedInputChange("owner", "email", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Phone"
-                    value={restaurantData.owner.phone}
-                    onChange={(e) =>
-                      handleNestedInputChange("owner", "phone", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="National ID"
-                    value={restaurantData.owner.nationalId}
-                    onChange={(e) =>
-                      handleNestedInputChange(
-                        "owner",
-                        "nationalId",
-                        e.target.value
-                      )
-                    }
+                    id="longitude"
+                    type="number"
+                    value={restaurantData.address.longitude}
+                    onChange={(e) => handleAddressChange("longitude", e.target.value)}
+                    placeholder="Enter longitude"
                   />
                 </div>
               </div>
@@ -387,110 +224,9 @@ export function SettingsPage() {
             <CardFooter className="flex justify-end">
               <Button
                 onClick={() => saveResaurantData()}
-                disabled={savedPaymentMethods.length === 0}
               >
                 <Save className="mr-2 h-4 w-4" />
                 Save Changes
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* Payment Methods */}
-        <TabsContent value="payments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>Manage your payment methods.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {restaurantData.paymentMethods.map((method, index) => (
-                <div key={index} className="space-y-4 border-b pb-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`card-number-${index}`}>Card Number</Label>
-                    <Input
-                      id={`card-number-${index}`}
-                      value={method.cardNumber}
-                      onChange={(e) =>
-                        handlePaymentMethodChange(
-                          index,
-                          "cardNumber",
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter card number"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`card-holder-name-${index}`}>
-                      Card Holder Name
-                    </Label>
-                    <Input
-                      id={`card-holder-name-${index}`}
-                      value={method.cardHolderName}
-                      onChange={(e) =>
-                        handlePaymentMethodChange(
-                          index,
-                          "cardHolderName",
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter card holder name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`expiry-date-${index}`}>Expiry Date</Label>
-                    <Input
-                      id={`expiry-date-${index}`}
-                      value={method.expiryDate}
-                      onChange={(e) =>
-                        handlePaymentMethodChange(
-                          index,
-                          "expiryDate",
-                          e.target.value
-                        )
-                      }
-                      placeholder="MM/YY"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`cvv-${index}`}>CVV</Label>
-                    <Input
-                      id={`cvv-${index}`}
-                      value={method.cvv}
-                      onChange={(e) =>
-                        handlePaymentMethodChange(index, "cvv", e.target.value)
-                      }
-                      placeholder="Enter CVV"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`is-default-${index}`}
-                      checked={method.isDefault}
-                      onChange={(e) =>
-                        handlePaymentMethodChange(
-                          index,
-                          "isDefault",
-                          e.target.checked
-                        )
-                      }
-                    />
-                    <Label htmlFor={`is-default-${index}`}>
-                      Set as Default
-                    </Label>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button
-                onClick={() => savePaymentData()}
-                disabled={!isValidPayment}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                Save Payment Methods
               </Button>
             </CardFooter>
           </Card>
