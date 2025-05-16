@@ -27,7 +27,7 @@ import { set } from "date-fns";
 import { createNewOrder } from "@/lib/api/orderApi";
 import { ToastAction } from "@/components/ui/toast";
 import { createNewTransaction } from "@/lib/api/paymentApi";
-import { createNotification, sendEmailNotification } from "@/lib/api/notificationApi";
+import { createNotification, sendEmailNotification, sendSMSNotification } from "@/lib/api/notificationApi";
 import { useAuth } from "@/contexts/auth-context";
 
 if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
@@ -130,7 +130,7 @@ export default function Home() {
           };
 
           try {
-            // console.log(`emailNotification => `, emailNotification);
+            console.log(`emailNotification => `, emailNotification);
             await sendEmailNotification(emailNotification);
           } catch (emailError) {
             console.error("Failed to send email notification:", emailError);
@@ -142,7 +142,8 @@ export default function Home() {
           };
 
           try {
-            // await sendSMSNotification(smsData);
+            await sendSMSNotification(smsData);
+            console.log("SMS notification sent successfully.");
             toast({
               title: "Notification Sent",
               description: "Customer has been notified via SMS.",
@@ -194,8 +195,8 @@ export default function Home() {
             });
           }
 
-          router.push("/order-placed");
-          router.refresh();
+          // router.push("/order-placed");
+          // router.refresh();
         }
 
 
