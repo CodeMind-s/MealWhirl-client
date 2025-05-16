@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}") : null;
   // console.log(`user => `, user);
   const [formData, setFormData] = useState({
+    name: user?.name || "",
     email: user?.email || "",
     password: "",
     phone: user?.phone || "",
@@ -37,12 +38,13 @@ export default function ProfilePage() {
       },
     },
   });
-  const [errors, setErrors] = useState<{ email?: string; password?: string; phone?: string; street?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; phone?: string; street?: string }>({});
   const [showPassword, setShowPassword] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string; phone?: string; street?: string } = {};
+    const newErrors: { name?: string; email?: string; password?: string; phone?: string; street?: string } = {};
+    if (!formData.name) newErrors.name = "Name is required.";
     if (!formData.email) newErrors.email = "Email is required.";
     if (!formData.password) newErrors.password = "Password is required.";
     if (!formData.phone) newErrors.phone = "Phone number is required.";
@@ -188,9 +190,8 @@ export default function ProfilePage() {
         description: "The notification has been deleted successfully.",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Instead of reloading, just update the notifications state to trigger a re-render
+      getAllNotifications(user._id);
 
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -210,9 +211,11 @@ export default function ProfilePage() {
         description: `Marked notification as read: ${notificationId}`,
         variant: "default",
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification._id === notificationId ? { ...notification, isRead: true } : notification
+        )
+      );
     } catch (error) {
       console.error("Error marking notification as read:", error);
       toast({
@@ -309,12 +312,12 @@ export default function ProfilePage() {
         </div >
 
         <div className="md:col-span-2">
-          <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="orders">Recent Orders</TabsTrigger>
+          <Tabs defaultValue="notifications" className="w-full">
+            <TabsList className="grid w-full grid-cols-1">
+              {/* <TabsTrigger value="orders">Recent Orders</TabsTrigger> */}
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
-            <TabsContent value="orders" className="mt-6">
+            {/* <TabsContent value="orders" className="mt-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Recent Orders</h2>
                 <Link href="/profile/orders">
@@ -365,7 +368,7 @@ export default function ProfilePage() {
                   </Card>
                 ))}
               </div>
-            </TabsContent>
+            </TabsContent> */}
             <TabsContent value="notifications" className="mt-6">
               <Card>
                 <CardHeader>
@@ -425,6 +428,17 @@ export default function ProfilePage() {
           </DialogHeader>
           <form className="space-y-4">
             <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name || ""}
+                onChange={handleInputChange}
+              />
+              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            </div>
+            <div>
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -444,6 +458,7 @@ export default function ProfilePage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleInputChange}
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
