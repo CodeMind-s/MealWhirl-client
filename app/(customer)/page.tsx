@@ -42,23 +42,33 @@ interface Restaurant {
 
 export default function Home() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const dummyImages = [
+    "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "/placeholder-logo.png",
+    "/placeholder-user.jpg",
+    "/images/restaurant1.jpg",
+    "/images/restaurant2.jpg",
+    "/images/restaurant3.jpg",
+    "/images/restaurant4.jpg"
+  ];
   const fetchRestaurants = async () => {
     try {
       const data = await getAllRestaurants();
-      const transformedData = (data as any[]).map((restaurant) => ({
+      const transformedData = (data as any[]).map((restaurant, idx) => ({
         id: restaurant._id || "default-id", // Default id
         name: restaurant.refID?.name || "Default Restaurant", // Default name
         description: "No description available",
         cuisineType: "Various",
-        rating: 0,
-        imageUrl: "/default-restaurant.jpg", // Default image
+        rating: 23,
+        imageUrl: dummyImages[idx % dummyImages.length], // Assign dummy image
         email: restaurant.email || "dummyemail@example.com",
         phone: restaurant.phone || "0000000000",
         type: restaurant.type || "Restaurant",
         isAdmin: restaurant.isAdmin || false,
-        reviewCount: 0,
+        reviewCount: 100,
         deliveryTime: 30,
-        deliveryFee: 0,
+        deliveryFee: 15,
         distance: "2 km",
         isOpen: true,
         refID: restaurant.refID || {
