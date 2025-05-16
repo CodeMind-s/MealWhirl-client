@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ToastAction } from "@/components/ui/toast";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { createNotification, sendEmailNotification, sendSMSNotification } from "@/lib/api/notificationApi";
 import { createNewOrder } from "@/lib/api/orderApi";
 import { createNewTransaction } from "@/lib/api/paymentApi";
 import { CircleCheckIcon } from "lucide-react";
@@ -21,7 +23,8 @@ export default function PaymentSuccess({
 }) {
   const [order, setOrder] = useState<any>();
   const { toast } = useToast();
-  
+  const { user } = useAuth();
+
   useEffect(() => {
     const storedOrder = localStorage.getItem("order");
     if (storedOrder) {
@@ -88,6 +91,99 @@ export default function PaymentSuccess({
             description: "Order created successfully!",
             variant: "default",
           });
+
+          // Explicitly type the response data
+          const responseData = response.data as { _id: string };
+
+          // Send email notification
+          const emailNotification = {
+            email: user?.email || "customer@example.com", // Use actual customer email from user context
+            order: {
+              _id: responseData._id,
+              items: order.items.map((item: any) => ({
+                name: item.itemName,
+                quantity: item.quentity.toString(),
+                price: item.total.toString(),
+              })),
+              subtotal: order.subTotal?.toString() ?? "0",
+              deliveryFee: order.deliveryFee?.toString() ?? "0",
+              tax: order.tax?.toString() ?? "0",
+              totalAmount: order.totalAmount?.toString() ?? "0",
+              deliveryAddress: order.deliveryAddress?.address || "",
+              estimatedDelivery: "30 minutes",
+              status: "PLACED",
+            },
+          };
+
+          try {
+            console.log(`emailNotification => `, emailNotification);
+            await sendEmailNotification(emailNotification);
+          } catch (emailError) {
+            console.error("Failed to send email notification:", emailError);
+          }
+
+          const smsData = {
+            to: "94774338424", // Use phone from deliveryAddress if available
+            message: `MealWhirl\n\nHi ${user?.name || "Customer"},\nYour order has been placed successfully!\nItems: ${order.items.map((item: any) => `${item.itemName} x${item.quentity}`).join(", ")}\n\nTotal: Rs. ${order.totalAmount}`,
+          };
+
+          try {
+            await sendSMSNotification(smsData);
+            console.log("SMS notification sent successfully.");
+            toast({
+              title: "Notification Sent",
+              description: "Customer has been notified via SMS.",
+            });
+          } catch (smsError) {
+            console.error("Error sending SMS notification:", smsError);
+            toast({
+              variant: "destructive",
+              title: "Notification Error",
+              description: "Failed to send SMS notification to the customer.",
+            });
+          }
+
+          // Create notification for the customer
+          const customerNotification = {
+            userId: order.userId, // Use the actual customer user ID
+            title: "Order Placed Successfully",
+            message: `Your order has been placed successfully!\n\nItems: ${order.items
+              .map((item: any) => `${item.itemName} x${item.quentity}`)
+              .join(", ")}\nTotal Amount: Rs. ${order.totalAmount}\nThank you for choosing MealWhirl.`,
+          };
+
+          try {
+            await createNotification(customerNotification);
+            console.log("Customer notification sent successfully.");
+          } catch (customerNotificationError) {
+            console.error("Error sending customer notification:", customerNotificationError);
+            toast({
+              variant: "destructive",
+              title: "Notification Error",
+              description: "Failed to send notification to the customer.",
+            });
+          }
+
+          // Create notification for the restaurant
+          const restaurantNotification = {
+            userId: order.restaurantId, // Use the actual restaurant user ID
+            title: "New Order Received",
+            message: `A new order has been placed!\n\nOrder ID: ${responseData._id}\nItems: ${order.items
+              .map((item: any) => `${item.itemName} x${item.quentity}`)
+              .join(", ")}\nTotal Amount: Rs. ${order.totalAmount}\nPlease prepare the order.`,
+          };
+
+          try {
+            await createNotification(restaurantNotification);
+            console.log("Restaurant notification sent successfully.");
+          } catch (restaurantNotificationError) {
+            console.error("Error sending restaurant notification:", restaurantNotificationError);
+            toast({
+              variant: "destructive",
+              title: "Notification Error",
+              description: "Failed to send notification to the restaurant.",
+            });
+          }
         }
       }
     } catch (error: any) {
