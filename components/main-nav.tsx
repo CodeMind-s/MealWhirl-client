@@ -127,7 +127,7 @@ export default function MainNav() {
               )}
             </Button>
           </Link>
-          <Link href="/profile">
+          {/* <Link href="/profile">
             <Button
               variant="outline"
               size="icon"
@@ -135,7 +135,7 @@ export default function MainNav() {
             >
               <User className="h-5 w-5" />
             </Button>
-          </Link>
+          </Link> */}
         </div>
       </div >
     </header >
