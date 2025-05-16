@@ -137,7 +137,6 @@ export default function NotificationsPage() {
       await markNotificationsAsRead(notificationId, { isRead: true });
       toast({
         title: "Notification Marked as Read",
-        description: `Marked notification as read: ${notificationId}`,
         variant: "default",
       });
       setNotifications((prev) =>
