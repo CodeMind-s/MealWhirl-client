@@ -1,15 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import Link from "next/link"
 import Image from "next/image"
 import { Clock, MapPin, Phone, Settings, ShoppingBag, User, Eye, EyeOff, Delete, Trash, Trash2, CheckCheck } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -208,7 +204,6 @@ export default function ProfilePage() {
       await markNotificationsAsRead(notificationId, { isRead: true });
       toast({
         title: "Notification Marked as Read",
-        description: `Marked notification as read: ${notificationId}`,
         variant: "default",
       });
       setNotifications((prev) =>
@@ -226,10 +221,8 @@ export default function ProfilePage() {
     }
   };
 
-  // console.log(`notifications => `, notifications);
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -376,41 +369,64 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {notifications?.length > 0 ? (
-                    notifications.map((notification: { title: string; message: string; isRead: boolean, _id: string }, index: number) => (
-                      <div
-                        key={index}
-                        className={`border rounded-lg p-4 flex justify-between items-start ${notification.isRead ? 'bg-gray-50' : 'bg-blue-100'}`}
-                      >
-                        <div>
-                          <p className="font-medium">{notification.title}</p>
-                          <p className="text-sm text-gray-500">{notification.message}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          {!notification.isRead && (
+                    notifications.map(
+                      (
+                        notification: {
+                          title: string;
+                          message: string;
+                          isRead: boolean;
+                          _id: string;
+                          createdAt?: string;
+                        },
+                        index: number
+                      ) => (
+                        <div
+                          key={index}
+                          className={`border rounded-lg p-4 flex justify-between items-start ${notification.isRead ? "bg-gray-50" : "bg-blue-100"
+                            }`}
+                        >
+                          <div>
+                            <p className="font-medium">{notification.title}</p>
+                            <p className="text-sm text-gray-500">{notification.message}</p>
+                            {notification.createdAt && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notification.createdAt).toLocaleString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            {!notification.isRead && (
+                              <Button
+                                variant="outline"
+                                className="hover:text-white"
+                                onClick={() => {
+                                  handleMarkAsRead(notification._id);
+                                  setNotifications((prev) =>
+                                    prev.map((n) =>
+                                      n._id === notification._id ? { ...n, read: true } : n
+                                    )
+                                  );
+                                }}
+                              >
+                                <CheckCheck className="h-5 w-5" />
+                              </Button>
+                            )}
                             <Button
-                              variant="outline"
-                              className="hover:text-white"
-                              onClick={() => {
-                                handleMarkAsRead(notification._id);
-                                setNotifications((prev) =>
-                                  prev.map((n) =>
-                                    n._id === notification._id ? { ...n, read: true } : n
-                                  )
-                                );
-                              }}
+                              variant="destructive"
+                              onClick={() => handleDeleteNotification(notification._id)}
                             >
-                              <CheckCheck className="h-5 w-5" />
+                              <Trash2 className="h-5 w-5" />
                             </Button>
-                          )}
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDeleteNotification(notification._id)}
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </Button>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      )
+                    )
                   ) : (
                     <p className="text-gray-500">No notifications available.</p>
                   )}
