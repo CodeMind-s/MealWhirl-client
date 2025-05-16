@@ -39,29 +39,6 @@ interface Restaurant {
 }
 
 export default function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
-  // const [restaurantData, setRestaurantData] = useState<Restaurant | null>(null);
-
-  // useEffect(() => {
-  //   fetchRestaurant(restaurant.id)
-  //     .then((data) => {
-  //       setRestaurantData(data)
-  //       console.log("Restaurant data:", data)
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching restaurant data:", error)
-  //     })
-  // }, [restaurant.id]);
-
-  // const fetchRestaurant = async (id: string) => {
-  //   try {
-  //     const response = await getUserById(id) as { data: Restaurant }
-  //     return response.data
-  //   } catch (error) {
-  //     console.error("Failed to fetch restaurant:", error)
-  //     throw error
-  //   }
-  // };
-
   return (
     <Link href={`/restaurants/${restaurant.id}`}>
       <Card className="overflow-hidden h-full transition-all hover:shadow-md hover:border-primary/50 group">
