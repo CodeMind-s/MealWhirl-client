@@ -104,7 +104,7 @@ export default function ProfilePage() {
                 <CardDescription>{userData?.email?.value}</CardDescription>
                 <span className=" text-sm">{user?.email || "N/A"}</span>
                 <Badge className="text-xs mt-2">Verified</Badge>
-          
+
               </div>
             </CardHeader>
             <CardContent>
@@ -129,12 +129,12 @@ export default function ProfilePage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
+            {/* <CardFooter>
               <Button variant="outline" className="w-full">
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
 
           <div className="grid grid-cols-2 gap-4 mt-6">
@@ -270,7 +270,7 @@ export default function ProfilePage() {
                               service fee.
                             </p>
                           </div>
-          
+
                         </div>
                       </div>
                       {/* <Button variant="outline" className="w-full">
