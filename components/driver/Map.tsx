@@ -110,7 +110,7 @@ useEffect(() => {
             long = longitude;
           },
           (error) => {
-            console.error("Error getting location:", error);
+            // console.error("Error getting location:", error);
             setUserLocation([0, 0]);
           }
         );
