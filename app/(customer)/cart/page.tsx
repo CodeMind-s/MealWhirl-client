@@ -236,12 +236,14 @@ export default function CartPage() {
         quentity: item.quantity.toString(),
         total: item.price.toString(),
         imageUrl: item.imageUrl || "",
+        id: item.id,
       })),
       deliveryAddress: {
         address: '',
-        latitude: 0,
-        longitude: 0,
+        latitude: 6.875493,
+        longitude: 79.861039,
       },
+      cartId: cartId,
       paymentId: "",
       paymentMethod: "",
       totalAmount: cartTotal,
@@ -274,8 +276,10 @@ export default function CartPage() {
     return (
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="text-center py-16">
-          <h1 className="text-3xl font-bold mb-4">Error</h1>
-          <p className="text-gray-500 mb-8">{error}</p>
+          <h1 className="text-3xl font-bold mb-4">No items</h1>
+            <p className="text-gray-500 mb-8">
+              You haven't added any items to your cart yet. Start exploring restaurants and add your favorite dishes!
+            </p>
           <Link href="/restaurants">
             <Button size="lg" className="px-8 rounded-full">
               Browse Restaurants
