@@ -187,7 +187,7 @@ useEffect(() => {
   }, [userLocation, latitude, longitude, restLatitude, restLongitude]);
 
   return (
-    <div style={{ height: "100%", width: "100%" }}>
+    <div style={{ height: "100%", width: "100%" }} className=" z-10">
       <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
     </div>
   );
