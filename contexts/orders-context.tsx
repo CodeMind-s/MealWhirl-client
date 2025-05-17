@@ -44,12 +44,14 @@ export interface Order {
     quentity: string;
     total: string;
     imageUrl: string;
+    id: string;
   }[];
   deliveryAddress: {
     address: string;
     latitude: number;
     longitude: number;
   };
+  cartId: string;
   paymentId: string;
   paymentMethod: string;
   totalAmount: number;
