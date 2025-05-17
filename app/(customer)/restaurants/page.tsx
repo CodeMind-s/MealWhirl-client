@@ -95,7 +95,7 @@ export default function RestaurantsPage() {
       }));
       setRestaurants(transformedData);
     } catch (error) {
-      console.error("Error fetching restaurants:", error);
+      // console.error("Error fetching restaurants:", error);
     }
   };
 
