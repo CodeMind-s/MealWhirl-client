@@ -119,7 +119,7 @@ export default function PaymentSuccess({
             console.log(`emailNotification => `, emailNotification);
             await sendEmailNotification(emailNotification);
           } catch (emailError) {
-            console.error("Failed to send email notification:", emailError);
+            // console.error("Failed to send email notification:", emailError);
           }
 
           const smsData = {
@@ -135,7 +135,7 @@ export default function PaymentSuccess({
               description: "Customer has been notified via SMS.",
             });
           } catch (smsError) {
-            console.error("Error sending SMS notification:", smsError);
+            // console.error("Error sending SMS notification:", smsError);
             toast({
               variant: "destructive",
               title: "Notification Error",
@@ -156,7 +156,7 @@ export default function PaymentSuccess({
             await createNotification(customerNotification);
             console.log("Customer notification sent successfully.");
           } catch (customerNotificationError) {
-            console.error("Error sending customer notification:", customerNotificationError);
+            // console.error("Error sending customer notification:", customerNotificationError);
             toast({
               variant: "destructive",
               title: "Notification Error",
@@ -177,7 +177,7 @@ export default function PaymentSuccess({
             await createNotification(restaurantNotification);
             console.log("Restaurant notification sent successfully.");
           } catch (restaurantNotificationError) {
-            console.error("Error sending restaurant notification:", restaurantNotificationError);
+            // console.error("Error sending restaurant notification:", restaurantNotificationError);
             toast({
               variant: "destructive",
               title: "Notification Error",
