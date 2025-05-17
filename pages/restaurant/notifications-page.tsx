@@ -100,7 +100,7 @@ export default function NotificationsPage() {
         throw new Error("Failed to fetch notifications");
       }
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      // console.error("Error fetching notifications:", error);
       toast({
         title: "Error",
         description: "Failed to fetch notifications.",
@@ -123,7 +123,7 @@ export default function NotificationsPage() {
       setNotifications((prev) => [...prev]);
 
     } catch (error) {
-      console.error("Error deleting notification:", error);
+      // console.error("Error deleting notification:", error);
       toast({
         title: "Error",
         description: "Failed to delete the notification.",
@@ -145,7 +145,7 @@ export default function NotificationsPage() {
         )
       );
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      // console.error("Error marking notification as read:", error);
       toast({
         title: "Error",
         description: "Failed to mark the notification as read.",
