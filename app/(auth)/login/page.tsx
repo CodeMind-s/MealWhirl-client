@@ -74,7 +74,7 @@ export default function LoginPage() {
   // }
 
   return (
-    <div className="min-h-screen pattern-bg flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="h-dvh pattern-bg flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
           <div className="px-8 py-6">
@@ -157,17 +157,17 @@ export default function LoginPage() {
                   </summary>
                   <div className="mt-2 space-y-2 rounded-md bg-muted p-3">
                     <p>
-                      <strong>Customer:</strong> cust.test@mail.com / cust123
+                      <strong>Customer:</strong> arshartisan@gmail.com / arsh123
                     </p>
                     <p>
-                      <strong>Driver:</strong> driver.test@mail.com / driver123
+                      <strong>Driver:</strong> kumar@gmail.com / kumar123
                     </p>
                     <p>
-                      <strong>Restaurant:</strong> rest.test@mail.com / rest123
+                      <strong>Restaurant:</strong> tfb@gmail.com / tfb123
                     </p>
-                    <p>
+                    {/* <p>
                       <strong>Admin:</strong> admin.test@mail.com / admin123
-                    </p>
+                    </p> */}
                   </div>
                 </details>
               </div>
