@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ClientOnly } from "@/components/ClientOnly";
 import { ReactNode } from "react";
 import '../styles/globals.css';
 
@@ -18,17 +19,19 @@ export default function RootLayout({
   return (
     <html>
       <body lang="en" suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          // defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+        <ClientOnly>
+          <ThemeProvider
+            attribute="class"
+            // defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <AuthProvider>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </ThemeProvider>
+        </ClientOnly>
       </body>
     </html>
   );
