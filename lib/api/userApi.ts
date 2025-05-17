@@ -1,5 +1,15 @@
 import { api } from "../middleware/api";
 
+export async function createUser(data: any) {
+  try {
+    const response = await api.post(`/users`, data);
+    return response.data;
+  } catch (error) {
+    console.log("Error creating user:", error);
+    throw error;
+  }
+}
+
 export async function getUserById(userId: string) {
   try {
     const response = await api.get(`/users/${userId}`);
