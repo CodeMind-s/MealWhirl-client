@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image"
 import { Clock, MapPin, Phone, Settings, ShoppingBag, User, Eye, EyeOff, Delete, Trash, Trash2, CheckCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -37,6 +37,7 @@ export default function ProfilePage() {
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; phone?: string; street?: string }>({});
   const [showPassword, setShowPassword] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationsFetched, setNotificationsFetched] = useState(false);
 
   const validateForm = () => {
     const newErrors: { name?: string; email?: string; password?: string; phone?: string; street?: string } = {};
@@ -111,19 +112,6 @@ export default function ProfilePage() {
 
   const recentOrders = orders.slice(0, 3)
 
-  useEffect(() => {
-    if (user && notifications.length === 0) {
-      getAllNotifications(user._id);
-    }
-
-    // Request notification permission on component mount
-    if (Notification.permission === "default") {
-      Notification.requestPermission().catch((err) => {
-        console.error("Notification permission error:", err);
-      });
-    }
-  }, [user, notifications]);
-
   const showBrowserNotification = (notification: { title: string; message: string }): void => {
     console.log("Attempting to show notification:", notification);
 
@@ -149,23 +137,28 @@ export default function ProfilePage() {
     }
   };
 
-  const getAllNotifications = async (userId: string): Promise<any> => {
+  const getAllNotifications = useCallback(async (userId: string): Promise<any> => {
     try {
       const response = await getNotificationsByUser(userId);
+      setNotificationsFetched(true);
       if (response.status === 200) {
         const sortedNotifications = (response.data as any[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setNotifications(sortedNotifications);
-
-        // Show browser notifications for unread notifications
         sortedNotifications.forEach((notification) => {
           if (!notification.isRead) {
             showBrowserNotification(notification);
           }
         });
       } else {
-        throw new Error("Failed to fetch notifications");
+        setNotificationsFetched(true);
+        toast({
+          title: "Error",
+          description: "Failed to fetch notifications.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
+      setNotificationsFetched(true);
       console.error("Error fetching notifications:", error);
       toast({
         title: "Error",
@@ -173,7 +166,22 @@ export default function ProfilePage() {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (user && !notificationsFetched) {
+      getAllNotifications(user._id);
+    }
+  }, [user, notificationsFetched, getAllNotifications]);
+
+  useEffect(() => {
+    // Request notification permission on component mount
+    if (Notification.permission === "default") {
+      Notification.requestPermission().catch((err) => {
+        console.error("Notification permission error:", err);
+      });
+    }
+  }, []);
 
   const handleDeleteNotification = async (notificationId: string) => {
     try {
