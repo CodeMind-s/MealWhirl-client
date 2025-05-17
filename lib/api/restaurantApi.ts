@@ -14,10 +14,10 @@ export const createUpdateResaurant = async (userData: Record<string, any>, statu
     const response = await method(`/users/v1/restaurants${suffix}`, payload);
     return response.data;
   } catch (error: any) {
-    console.error(
-      "Error updating user:",
-      error.response?.data || error.message
-    );
+    // console.error(
+    //   "Error updating user:",
+    //   error.response?.data || error.message
+    // );
     throw error.response?.data || error.message;
   }
 };
@@ -30,10 +30,10 @@ export const addPayamentMethod = async (userData: Record<string, any>) => {
     );
     return response.data;
   } catch (error: any) {
-    console.error(
-      "Error adding payment method:",
-      error.response?.data || error.message
-    );
+    // console.error(
+    //   "Error adding payment method:",
+    //   error.response?.data || error.message
+    // );
     throw error.response?.data || error.message;
   }
 };
@@ -46,10 +46,10 @@ export const addMenuItem = async (menuData: Record<string, any>) => {
       );
       return response.data;
     } catch (error: any) {
-      console.error(
-        "Error adding menu item:",
-        error.response?.data || error.message
-      );
+      // console.error(
+      //   "Error adding menu item:",
+      //   error.response?.data || error.message
+      // );
       throw error.response?.data || error.message;
     }
   };
@@ -62,10 +62,10 @@ export const addMenuItem = async (menuData: Record<string, any>) => {
       );
       return response.data;
     } catch (error: any) {
-      console.error(
-        "Error adding menu item:",
-        error.response?.data || error.message
-      );
+      // console.error(
+      //   "Error adding menu item:",
+      //   error.response?.data || error.message
+      // );
       throw error.response?.data || error.message;
     }
   };
@@ -77,10 +77,10 @@ export const addMenuItem = async (menuData: Record<string, any>) => {
         `/users/v1/restaurant/id/${menuData.id}/menu/${menuData.menuId}`);
       return response.data;
     } catch (error: any) {
-      console.error(
-        "Error adding menu item:",
-        error.response?.data || error.message
-      );
+      // console.error(
+      //   "Error adding menu item:",
+      //   error.response?.data || error.message
+      // );
       throw error.response?.data || error.message;
     }
   }
