@@ -1,14 +1,14 @@
-'use client'
-import Link from "next/link"
-import Image from "next/image"
-import { Search, ArrowRight } from "lucide-react"
+"use client";
+import Link from "next/link";
+import Image from "next/image";
+import { Search, ArrowRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import RestaurantCard from "@/components/restaurant-card"
-import { restaurants } from "@/lib/data"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import RestaurantCard from "@/components/restaurant-card";
+import { restaurants } from "@/lib/data";
 import { getAllRestaurants } from "@/lib/api/userApi";
-import { use, useEffect, useState } from "react"
+import { use, useEffect, useState } from "react";
 
 interface Restaurant {
   id: string;
@@ -45,12 +45,12 @@ export default function Home() {
   const dummyImages = [
     "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "/placeholder-logo.png",
-    "/placeholder-user.jpg",
-    "/images/restaurant1.jpg",
-    "/images/restaurant2.jpg",
-    "/images/restaurant3.jpg",
-    "/images/restaurant4.jpg"
+    "https://images.unsplash.com/photo-1421622548261-c45bfe178854?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1599458448510-59aecaea4752?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1586999768265-24af89630739?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1543007631-283050bb3e8c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1538334421852-687c439c92f4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjd8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1571168136613-46401b03904e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjl8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
   ];
   const fetchRestaurants = async () => {
     try {
@@ -94,7 +94,6 @@ export default function Home() {
     fetchRestaurants();
   }, []);
 
-
   return (
     <div>
       {/* Hero Section with Background */}
@@ -112,8 +111,9 @@ export default function Home() {
                 </h1>
               </div>
               <p className="max-w-[600px] text-gray-600 dark:text-gray-300 text-lg md:text-xl">
-                Browse through hundreds of restaurants and order your favorite meals with just a few clicks. Fast
-                delivery, easy payment, and real-time order tracking.
+                Browse through hundreds of restaurants and order your favorite
+                meals with just a few clicks. Fast delivery, easy payment, and
+                real-time order tracking.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
                 <div className="relative flex-1">
@@ -149,7 +149,7 @@ export default function Home() {
               <div className="relative h-[350px] w-[350px] sm:h-[400px] sm:w-[400px] lg:h-[480px] lg:w-[480px]">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-full blur-3xl -z-10 transform scale-95"></div>
                 <Image
-                  src={require("@/assets/burger.png")}
+                  src={"/images/hero.png"}
                   alt="Food delivery illustration"
                   fill
                   className="object-contain"
@@ -166,10 +166,17 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-baseline mb-10">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-2">Popular Restaurants</h2>
-              <p className="text-muted-foreground">Explore our users' favorite food destinations</p>
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-2">
+                Popular Restaurants
+              </h2>
+              <p className="text-muted-foreground">
+                Explore our users' favorite food destinations
+              </p>
             </div>
-            <Link href="/restaurants" className="text-primary font-medium flex items-center hover:underline mt-2">
+            <Link
+              href="/restaurants"
+              className="text-primary font-medium flex items-center hover:underline mt-2"
+            >
               View all restaurants
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
@@ -186,8 +193,12 @@ export default function Home() {
       <section className="py-16 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-4">How MealWhirl Works</h2>
-            <p className="text-muted-foreground text-lg">Order your favorite food in just a few simple steps</p>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-4">
+              How MealWhirl Works
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Order your favorite food in just a few simple steps
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md">
@@ -196,7 +207,8 @@ export default function Home() {
               </div>
               <h3 className="font-medium text-xl mb-3">Choose a restaurant</h3>
               <p className="text-center text-muted-foreground">
-                Browse through our wide selection of restaurants and find what you're craving
+                Browse through our wide selection of restaurants and find what
+                you're craving
               </p>
             </div>
             <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md">
@@ -205,7 +217,8 @@ export default function Home() {
               </div>
               <h3 className="font-medium text-xl mb-3">Select your meals</h3>
               <p className="text-center text-muted-foreground">
-                Add your favorite items to your cart and customize them to your liking
+                Add your favorite items to your cart and customize them to your
+                liking
               </p>
             </div>
             <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md">
@@ -214,7 +227,8 @@ export default function Home() {
               </div>
               <h3 className="font-medium text-xl mb-3">Checkout & track</h3>
               <p className="text-center text-muted-foreground">
-                Pay securely and track your order in real-time as it makes its way to you
+                Pay securely and track your order in real-time as it makes its
+                way to you
               </p>
             </div>
           </div>
@@ -230,8 +244,12 @@ export default function Home() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-4">Why Choose MealWhirl?</h2>
-            <p className="text-muted-foreground text-lg">We make food ordering simple, fast and enjoyable</p>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-4">
+              Why Choose MealWhirl?
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              We make food ordering simple, fast and enjoyable
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-xl">
@@ -252,7 +270,8 @@ export default function Home() {
               </div>
               <h3 className="font-medium text-xl mb-2">Fast Delivery</h3>
               <p className="text-muted-foreground">
-                Our delivery partners ensure your food arrives quickly and still hot
+                Our delivery partners ensure your food arrives quickly and still
+                hot
               </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-xl">
@@ -275,7 +294,9 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="font-medium text-xl mb-2">Live Order Tracking</h3>
-              <p className="text-muted-foreground">Track your order in real-time from the restaurant to your door</p>
+              <p className="text-muted-foreground">
+                Track your order in real-time from the restaurant to your door
+              </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-xl">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -296,8 +317,12 @@ export default function Home() {
                   <path d="M12 16v2" />
                 </svg>
               </div>
-              <h3 className="font-medium text-xl mb-2">Wide Restaurant Selection</h3>
-              <p className="text-muted-foreground">Choose from hundreds of restaurants catering to every taste</p>
+              <h3 className="font-medium text-xl mb-2">
+                Wide Restaurant Selection
+              </h3>
+              <p className="text-muted-foreground">
+                Choose from hundreds of restaurants catering to every taste
+              </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-xl">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -314,8 +339,12 @@ export default function Home() {
                   <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z" />
                 </svg>
               </div>
-              <h3 className="font-medium text-xl mb-2">Personalized Experience</h3>
-              <p className="text-muted-foreground">Get recommendations based on your preferences and order history</p>
+              <h3 className="font-medium text-xl mb-2">
+                Personalized Experience
+              </h3>
+              <p className="text-muted-foreground">
+                Get recommendations based on your preferences and order history
+              </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-xl">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -335,7 +364,8 @@ export default function Home() {
               </div>
               <h3 className="font-medium text-xl mb-2">Special Offers</h3>
               <p className="text-muted-foreground">
-                Enjoy exclusive deals and discounts from your favorite restaurants
+                Enjoy exclusive deals and discounts from your favorite
+                restaurants
               </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-xl">
@@ -355,7 +385,9 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="font-medium text-xl mb-2">Secure Payments</h3>
-              <p className="text-muted-foreground">Multiple secure payment options for hassle-free transactions</p>
+              <p className="text-muted-foreground">
+                Multiple secure payment options for hassle-free transactions
+              </p>
             </div>
           </div>
         </div>
@@ -365,10 +397,13 @@ export default function Home() {
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-6">Ready to satisfy your cravings?</h2>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-6">
+              Ready to satisfy your cravings?
+            </h2>
             <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied customers who use MealWhirl to discover new restaurants and enjoy delicious
-              meals delivered to their doorstep.
+              Join thousands of satisfied customers who use MealWhirl to
+              discover new restaurants and enjoy delicious meals delivered to
+              their doorstep.
             </p>
             <Button size="lg" variant="secondary" className="rounded-full px-8">
               <Link href="/restaurants">Browse Restaurants</Link>
@@ -377,5 +412,5 @@ export default function Home() {
         </div>
       </section>
     </div>
-  )
+  );
 }
