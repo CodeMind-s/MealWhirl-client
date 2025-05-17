@@ -54,12 +54,12 @@ export default function RestaurantsPage() {
   const dummyImages = [
     "https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "/placeholder-logo.png",
-    "/placeholder-user.jpg",
-    "/images/restaurant1.jpg",
-    "/images/restaurant2.jpg",
-    "/images/restaurant3.jpg",
-    "/images/restaurant4.jpg",
+    "https://images.unsplash.com/photo-1421622548261-c45bfe178854?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1599458448510-59aecaea4752?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1586999768265-24af89630739?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1543007631-283050bb3e8c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1538334421852-687c439c92f4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjd8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
+    "https://images.unsplash.com/photo-1571168136613-46401b03904e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mjl8fHJlc3RhdXJhbnR8ZW58MHwwfDB8fHwy",
   ];
   const fetchRestaurants = async () => {
     try {
