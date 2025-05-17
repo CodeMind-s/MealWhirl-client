@@ -27,8 +27,13 @@ import { set } from "date-fns";
 import { createNewOrder } from "@/lib/api/orderApi";
 import { ToastAction } from "@/components/ui/toast";
 import { createNewTransaction } from "@/lib/api/paymentApi";
-import { createNotification, sendEmailNotification, sendSMSNotification } from "@/lib/api/notificationApi";
+import {
+  createNotification,
+  sendEmailNotification,
+  sendSMSNotification,
+} from "@/lib/api/notificationApi";
 import { useAuth } from "@/contexts/auth-context";
+import { removeItemFromCart } from "@/lib/api/cartApi";
 
 if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
   throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
@@ -51,6 +56,7 @@ export default function Home() {
     setOrderPaymentMethod(paymentMethod);
     localStorage.setItem("order", JSON.stringify(order));
   }, [paymentMethod]);
+
 
   const handleNavigate = async () => {
     try {
@@ -104,7 +110,15 @@ export default function Home() {
             description: "Order created successfully!",
             variant: "default",
           });
-          clearCart();
+          // clearCart();
+          const cartData = {
+            cartId: order.cartId,
+            updates: {
+              type: "clear" as "clear"
+            },
+          };
+
+          await removeItemFromCart(cartData);
 
           // Explicitly type the response data
           const responseData = response.data as { _id: string };
@@ -137,9 +151,10 @@ export default function Home() {
           }
 
           const smsData = {
-            to: "94774338424", // Assuming phone number is part of deliveryAddress
-            message: 'MealWhirl\n\nYour order has been placed successfully!',
+            to: "94774338424", // Use phone from deliveryAddress if available
+            message: `MealWhirl\n\nHi ${user?.name || "Customer"},\nYour order has been placed successfully!\nItems: ${order.items.map((item: any) => `${item.itemName} x${item.quentity}`).join(", ")}\n\nTotal: Rs. ${order.totalAmount}`,
           };
+
 
           try {
             await sendSMSNotification(smsData);
@@ -161,7 +176,9 @@ export default function Home() {
           const customerNotification = {
             userId: order.userId, // Use the actual customer user ID
             title: "Order Placed Successfully",
-            message: `Your order has been placed successfully! Order ID: ${responseData._id}. Thank you for choosing MealWhirl.`,
+            message: `Your order has been placed successfully!\n\nItems: ${order.items
+              .map((item: any) => `${item.itemName} x${item.quentity}`)
+              .join(", ")}\nTotal Amount: Rs. ${order.totalAmount}\nThank you for choosing MealWhirl.`,
           };
 
           try {
@@ -180,7 +197,9 @@ export default function Home() {
           const restaurantNotification = {
             userId: order.restaurantId, // Use the actual restaurant user ID
             title: "New Order Received",
-            message: `A new order has been placed! Order ID: ${responseData._id}. Please prepare the order.`,
+            message: `A new order has been placed!\n\nOrder ID: ${responseData._id}\nItems: ${order.items
+              .map((item: any) => `${item.itemName} x${item.quentity}`)
+              .join(", ")}\nTotal Amount: Rs. ${order.totalAmount}\nPlease prepare the order.`,
           };
 
           try {
@@ -195,11 +214,9 @@ export default function Home() {
             });
           }
 
-          // router.push("/order-placed");
-          // router.refresh();
+          router.push("/order-placed");
+          router.refresh();
         }
-
-
       }
     } catch (error: any) {
       if (error.response) {
