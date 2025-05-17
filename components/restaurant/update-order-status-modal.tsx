@@ -67,7 +67,7 @@ export function UpdateOrderStatusModal({
             await assignDeliveryPerson(orderId, assignData);
             console.log("Delivery person assigned successfully.");
           } catch (assignError) {
-            console.error("Error assigning delivery person:", assignError);
+            // console.error("Error assigning delivery person:", assignError);
           }
         }
 
@@ -83,7 +83,7 @@ export function UpdateOrderStatusModal({
             await createNotification(driverNotification);
             console.log("Driver notification sent successfully.");
           } catch (driverNotificationError) {
-            console.error("Error sending driver notification:", driverNotificationError);
+            // console.error("Error sending driver notification:", driverNotificationError);
             toast({
               variant: "destructive",
               title: "Notification Error",
@@ -108,7 +108,7 @@ export function UpdateOrderStatusModal({
           // await sendSMSNotification(smsData);
           console.log("SMS notification sent successfully.");
         } catch (smsError) {
-          console.error("Error sending SMS notification:", smsError);
+          // console.error("Error sending SMS notification:", smsError);
         }
 
         // Create notification for the u
@@ -122,12 +122,12 @@ export function UpdateOrderStatusModal({
         const { data } = error.response;
 
         if (data && data.message) {
-          console.error(`Order status update failed: ${data.message}`);
+          // console.error(`Order status update failed: ${data.message}`);
         } else {
-          console.error("An unexpected error occurred. Please try again.");
+          // console.error("An unexpected error occurred. Please try again.");
         }
       } else {
-        console.error("An unexpected error occurred. Please check your network and try again.");
+        // console.error("An unexpected error occurred. Please check your network and try again.");
       }
     } finally {
       setIsSubmitting(false);
