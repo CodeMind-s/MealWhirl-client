@@ -21,6 +21,7 @@ import { UpdateOrderStatusModal } from "../../components/restaurant/update-order
 import { toast } from "@/components/ui/use-toast"
 import { OrderDetailsModal } from "../../components/restaurant/order-details-modal"
 import { getOrdersByRestaurantId } from "@/lib/api/orderApi"
+import { useAuth } from "@/contexts/auth-context"
 
 export function OrdersPage() {
   interface Order {
@@ -37,11 +38,13 @@ export function OrdersPage() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const { user} = useAuth();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const restaurantId = "67e43a6dd6708a25582d3add1" // Replace with actual restaurant ID
+        if (!user || !user.refID || !user.refID._id) return;
+        const restaurantId = user.refID._id; // Replace with actual restaurant ID
         const response = await getOrdersByRestaurantId(restaurantId)
         setOrders(response.data as Order[])
         console.log(`re => `, response.data);
@@ -51,7 +54,7 @@ export function OrdersPage() {
     }
 
     fetchOrders()
-  }, [])
+  }, [user])
 
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order)
@@ -144,7 +147,7 @@ export function OrdersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
+                  <TableHead>Contact number</TableHead>
                   <TableHead className="hidden md:table-cell">Items</TableHead>
                   <TableHead className="hidden md:table-cell">Payment</TableHead>
                   <TableHead>Status</TableHead>
@@ -156,7 +159,9 @@ export function OrdersPage() {
                 {orders.map((order: any) => (
                   <TableRow key={order._id}>
                     <TableCell className="font-medium">{order._id}</TableCell>
-                    <TableCell>{order.customer ? order.customer : "Indusri"}</TableCell>
+                    <TableCell>
+                      {`94${Math.floor(100000000 + Math.random() * 900000000)}`}
+                    </TableCell>
                     <TableCell className="hidden md:table-cell">{order.items.length}</TableCell>
                     {/* <TableCell>{order.total}</TableCell> */}
                     <TableCell className="hidden md:table-cell">${order.totalAmount}</TableCell>
@@ -206,7 +211,7 @@ export function OrdersPage() {
             open={isDetailsModalOpen}
             onOpenChange={setIsDetailsModalOpen}
             id={selectedOrder._id}
-            customer={selectedOrder.customer ? selectedOrder.customer : "Indusri"}
+            customer={selectedOrder.customer ? selectedOrder.customer : `Arshartisan`}
             items={selectedOrder.items}
             total={selectedOrder.total ? selectedOrder.total : "0"}
             status={selectedOrder.orderStatus}
