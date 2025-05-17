@@ -66,7 +66,7 @@ export function SettingsPage() {
 
   const saveResaurantData = async () => {
     if (!user?._id) {
-      console.error("User ID is undefined.");
+      // console.error("User ID is undefined.");
       return;
     }
 
@@ -99,7 +99,7 @@ export function SettingsPage() {
         window.location.reload();
       }, 1500);
     } catch (error) {
-      console.error("Error saving restaurant data:", error);
+      // console.error("Error saving restaurant data:", error);
     }
   };
 
