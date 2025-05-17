@@ -189,7 +189,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
             description: "Customer has been notified via SMS.",
           });
         } catch (smsError) {
-          console.error("Error sending SMS notification:", smsError);
+          // console.error("Error sending SMS notification:", smsError);
           toast({
             variant: "destructive",
             title: "Notification Error",
@@ -211,7 +211,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           //   description: "User has been notified about the order status update.",
           // });
         } catch (userNotificationError) {
-          console.error("Error sending user notification:", userNotificationError);
+          // console.error("Error sending user notification:", userNotificationError);
           toast({
             variant: "destructive",
             title: "Notification Error",
@@ -233,7 +233,7 @@ export default function OrderDetails({ orderId, onBack }: OrderDetailsProps) {
           //   description: "Customer has been notified about the order status update.",
           // });
         } catch (customerNotificationError) {
-          console.error("Error sending customer notification:", customerNotificationError);
+          // console.error("Error sending customer notification:", customerNotificationError);
           toast({
             variant: "destructive",
             title: "Notification Error",
