@@ -86,7 +86,7 @@ export default function ProfilePage() {
       window.location.reload();
       setIsDialogOpen(false);
     } catch (error) {
-      console.error("Error updating user:", error);
+      // console.error("Error updating user:", error);
       toast({
         title: "Update Failed",
         description: "There was an error updating your profile. Please try again.",
@@ -116,7 +116,7 @@ export default function ProfilePage() {
     console.log("Attempting to show notification:", notification);
 
     if (!("Notification" in window)) {
-      console.error("This browser does not support desktop notifications.");
+      // console.error("This browser does not support desktop notifications.");
       return;
     }
 
@@ -128,7 +128,7 @@ export default function ProfilePage() {
           icon: "/images/logo.png", // Replace with your app's logo if available
         });
       } catch (error) {
-        console.error("Error displaying notification:", error);
+        // console.error("Error displaying notification:", error);
       }
     } else if (Notification.permission === "denied") {
       console.warn("Notification permission was denied by the user.");
@@ -159,7 +159,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       setNotificationsFetched(true);
-      console.error("Error fetching notifications:", error);
+      // console.error("Error fetching notifications:", error);
       toast({
         title: "Error",
         description: "Failed to fetch notifications.",
@@ -178,7 +178,7 @@ export default function ProfilePage() {
     // Request notification permission on component mount
     if (Notification.permission === "default") {
       Notification.requestPermission().catch((err) => {
-        console.error("Notification permission error:", err);
+        // console.error("Notification permission error:", err);
       });
     }
   }, []);
@@ -198,7 +198,7 @@ export default function ProfilePage() {
       getAllNotifications(user._id);
 
     } catch (error) {
-      console.error("Error deleting notification:", error);
+      // console.error("Error deleting notification:", error);
       toast({
         title: "Error",
         description: "Failed to delete the notification.",
@@ -220,7 +220,7 @@ export default function ProfilePage() {
         )
       );
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      // console.error("Error marking notification as read:", error);
       toast({
         title: "Error",
         description: "Failed to mark the notification as read.",
