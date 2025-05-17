@@ -122,7 +122,7 @@ export default function OrderDetailPage({
           err.response?.data?.message ||
             "An unexpected error occurred. Please try again."
         );
-        console.error("Order Details Fetching Failed:", err);
+        // console.error("Order Details Fetching Failed:", err);
       } finally {
         setLoading(false);
       }
