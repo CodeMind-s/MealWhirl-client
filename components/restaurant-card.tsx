@@ -67,19 +67,19 @@ export default function RestaurantCard({ restaurant }: { restaurant: Restaurant 
             </h3>
             <div className="flex items-center gap-1 text-sm">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span>{restaurant.rating}</span>
+              <span>{parseFloat((Math.random() * 5).toFixed(1))}</span>
             </div>
           </div>
           <p className="text-sm text-gray-500 mb-2 line-clamp-1">{restaurant.cuisineType}</p>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Clock className="h-3.5 w-3.5" />
-            <span>{restaurant.deliveryTime} min</span>
+            <span>{Math.floor(Math.random() * 60) + 10} min</span>
             <span>•</span>
             <span>
               {Number(restaurant.deliveryFee) === 0 ? (
                 <span className="text-green-600 dark:text-green-500 font-medium">Free delivery</span>
               ) : (
-                `$${Number(restaurant.deliveryFee).toFixed(2)} delivery`
+                `$${Math.floor(Math.random() * 10)} delivery`
               )}
             </span>
           </div>
