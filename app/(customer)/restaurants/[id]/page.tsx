@@ -19,6 +19,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { ToastAction } from "@/components/ui/toast";
 import { addToCart } from "@/lib/api/cartApi";
 
+type RestaurantPageProps = {
+  id: string;
+};
+
 export const mapToMenuCategories = (
   menu: any[],
   restaurantId: string
@@ -57,7 +61,7 @@ export const mapToMenuItems = (
   }));
 };
 
-export default function RestaurantPage({ params }: { params: { id: string } }) {
+export default function RestaurantPage({params}: { params: RestaurantPageProps }) {
   const { toast } = useToast();
   // const { addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -80,6 +84,8 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const { user } = useAuth();
+  const [restaurantId, setRestaurantId] = useState<any>(null);
+  const [restaurantRefId, setRestaurantRefId] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -88,9 +94,15 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
   }, [user]);
 
   useEffect(() => {
+    if (params.id) {
+      setRestaurantId(params.id);
+    }
+  }, [params]);
+
+  useEffect(() => {
     const fetchRestaurantData = async () => {
       try {
-        const data = (await getUserById(params.id)) as {
+        const data = (await getUserById(restaurantId)) as {
           refID: {
             _id: string;
             name: string;
@@ -105,33 +117,35 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
           image: undefined,
           description: `Located at ${data.refID.address.street}, offering delicious meals.`,
           cuisineType: "",
-          rating: 0,
-          reviewCount: 0,
-          deliveryTime: 0,
-          deliveryFee: 0,
-          minOrder: 0,
-          distance: 0,
+          rating: parseFloat((Math.random() * 5).toFixed(1)),
+          reviewCount: Math.floor(Math.random() * 100),
+          deliveryTime: Math.floor(Math.random() * 60) + 10,
+          deliveryFee: Math.floor(Math.random() * 10),
+          minOrder: Math.floor(Math.random() * 20),
+          distance: Math.floor(Math.random() * 15),
           isOpen: true,
-          isNew: false,
+          isNew: Math.random() < 0.5,
         });
+
+        setRestaurantRefId(data.refID._id);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        // console.error("Error fetching user data:", error);
       }
     };
 
-    if (params.id) {
+    if (restaurantId) {
       fetchRestaurantData();
     }
-  }, [params.id]);
+  }, [restaurantId]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        if (!params.id) return;
-        const response: any = await getMenuItemByRestaurantId(params.id);
+        if (!restaurantRefId) return;
+        const response: any = await getMenuItemByRestaurantId(restaurantRefId);
         if (response.data) {
           // Map API response to menu categories
-          const menuCategories = mapToMenuCategories(response.data, params.id);
+          const menuCategories = mapToMenuCategories(response.data, restaurantRefId);
           setMenuCategories(menuCategories);
 
           // Create categoryId map
@@ -142,7 +156,7 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
           // Map API response to menu items
           const mappedMenuItems = mapToMenuItems(
             response.data,
-            params.id,
+            restaurantRefId,
             categoryIdMap
           );
           setMenuItems(mappedMenuItems);
@@ -165,8 +179,8 @@ export default function RestaurantPage({ params }: { params: { id: string } }) {
       }
     };
 
-    if (params.id) fetchMenuItems();
-  }, [params.id]);
+    if (restaurantRefId) fetchMenuItems();
+  }, [restaurantRefId]);
   // Filter menu items by restaurant and category
   // Filter menu items by category
   const filteredItems =
