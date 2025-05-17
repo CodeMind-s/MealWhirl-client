@@ -55,7 +55,7 @@ export default function Notifications() {
                 prevNotifications.map((n) => (n._id === id ? { ...n, isRead: true } : n))
             );
         } catch (error) {
-            console.error("Error marking notification as read:", error);
+            // console.error("Error marking notification as read:", error);
             toast({
                 title: "Error",
                 description: "Failed to mark the notification as read.",
@@ -111,7 +111,7 @@ export default function Notifications() {
                 throw new Error("Failed to fetch notifications");
             }
         } catch (error) {
-            console.error("Error fetching notifications:", error);
+            // console.error("Error fetching notifications:", error);
             toast({
                 title: "Error",
                 description: "Failed to fetch notifications.",
