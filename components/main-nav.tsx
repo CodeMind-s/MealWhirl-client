@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ShoppingCart, User, Menu } from "lucide-react"
@@ -10,12 +10,44 @@ import { useCart } from "@/lib/cart-context"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
+import { getCartByUserId } from "@/lib/api/cartApi"
+import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 export default function MainNav() {
   const { cart } = useCart()
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const { user } = useAuth();
+  const [cartItemCount, setCartItemCount] = useState(0);
   const isMobile = useMobile()
   const [isOpen, setIsOpen] = useState(false)
+  const [userId, setUserId] = useState<string>("");
+
+  useEffect(() => {
+    if (user) {
+      setUserId(user._id);
+      console.log("User ID:", user._id);
+    }
+  }, [user]);
+
+  useEffect(() => {
+      const fetchCart = async () => {
+        try {
+          // setIsLoading(true);
+          const response = await getCartByUserId(userId);
+          
+          if(response){
+            const cartData:any = response.data;
+            setCartItemCount(cartData.itemsByRestaurant[0]?.items.length || 0);
+          }
+        } catch (error) {
+          toast.error("Failed to fetch cart data");
+        }
+      };
+  
+      if (userId) {
+        fetchCart();
+      }
+    }, [userId]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
