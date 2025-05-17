@@ -46,7 +46,7 @@ export function OrdersPage() {
         setOrders(response.data as Order[])
         console.log(`re => `, response.data);
       } catch (error) {
-        console.error("Error fetching orders:", error)
+        // console.error("Error fetching orders:", error)
       }
     }
 
