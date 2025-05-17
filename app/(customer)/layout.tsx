@@ -19,23 +19,23 @@ export default function RootLayout({
     // <body className="min-h-screen flex flex-col">
     <>
       {/* <ProtectedRoute allowedRoles={["Customer"]}> */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <PlacedOrderProvider>
-            <CartProvider>
-              <OrdersProvider>
-                <MainNav />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <Toaster />
-              </OrdersProvider>
-            </CartProvider>
-          </PlacedOrderProvider>
-        </ThemeProvider>
+      <ThemeProvider
+        attribute="class"
+        // defaultTheme="light"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <PlacedOrderProvider>
+          <CartProvider>
+            <OrdersProvider>
+              <MainNav />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <Toaster />
+            </OrdersProvider>
+          </CartProvider>
+        </PlacedOrderProvider>
+      </ThemeProvider>
       {/* </ProtectedRoute> */}
     </>
     // </body>
