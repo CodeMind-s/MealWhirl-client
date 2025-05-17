@@ -14,16 +14,16 @@ interface AddToCartDto {
 }
 
 interface UpdateCartItemDto {
-    cartId: string;
-    updates: {
-        restaurantId: string;
-        menuItemId: string;
-        quantity: number;
-    };
+  cartId: string;
+  updates: {
+    restaurantId: string;
+    menuItemId: string;
+    quantity: number;
+  };
 }
 
 interface RemoveItemFromCartDto {
-cartId: string;
+  cartId: string;
   updates: {
     type: "item" | "clear";
     restaurantId?: string;
@@ -78,7 +78,10 @@ export const addToCart = async (data: AddToCartDto) => {
 
 export const updateCartItem = async (data: UpdateCartItemDto) => {
   try {
-    const response = await axiosInstance.patch(`/carts/${data.cartId}`, data.updates);
+    const response = await axiosInstance.patch(
+      `/carts/${data.cartId}`,
+      data.updates
+    );
     return response;
   } catch (error) {
     console.log("Error while updating cart item:", error);
@@ -88,7 +91,10 @@ export const updateCartItem = async (data: UpdateCartItemDto) => {
 
 export const removeItemFromCart = async (data: RemoveItemFromCartDto) => {
   try {
-    const response = await axiosInstance.patch(`/carts/items/${data.cartId}`, data.updates);
+    const response = await axiosInstance.patch(
+      `/carts/items/${data.cartId}`,
+      data.updates
+    );
     return response;
   } catch (error) {
     console.log("Error while removing item from cart:", error);
@@ -108,7 +114,10 @@ export const deleteCart = async (cartId: string) => {
 
 export const setActiveRestaurant = async (data: SetActiveRestaurantDto) => {
   try {
-    const response = await axiosInstance.patch(`/carts/active-restaurant`, data);
+    const response = await axiosInstance.patch(
+      `/carts/active-restaurant`,
+      data
+    );
     return response;
   } catch (error) {
     console.log("Error while setting active restaurant:", error);
