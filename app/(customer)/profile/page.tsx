@@ -1,25 +1,58 @@
-"use client"
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image"
-import { Clock, MapPin, Phone, Settings, ShoppingBag, User, Eye, EyeOff, Delete, Trash, Trash2, CheckCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import Image from "next/image";
+import {
+  Clock,
+  MapPin,
+  Phone,
+  Settings,
+  ShoppingBag,
+  User,
+  Eye,
+  EyeOff,
+  Delete,
+  Trash,
+  Trash2,
+  CheckCheck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { orders } from "@/lib/data"
-import { useAuth } from "@/contexts/auth-context"
+import { orders } from "@/lib/data";
+import { useAuth } from "@/contexts/auth-context";
 import { updateUserById } from "@/lib/api/userApi";
 import { useToast } from "@/hooks/use-toast";
-import { deleteNotification, getNotificationsByUser, markNotificationsAsRead } from "@/lib/api/notificationApi";
+import {
+  deleteNotification,
+  getNotificationsByUser,
+  markNotificationsAsRead,
+} from "@/lib/api/notificationApi";
 
 export default function ProfilePage() {
   const { logout } = useAuth();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user") || "{}") : null;
+  const user =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("user") || "{}")
+      : null;
   // console.log(`user => `, user);
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -34,18 +67,33 @@ export default function ProfilePage() {
       },
     },
   });
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; phone?: string; street?: string }>({});
+
+  // console.log(user.phone, "user.phone");
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    phone?: string;
+    street?: string;
+  }>({});
   const [showPassword, setShowPassword] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationsFetched, setNotificationsFetched] = useState(false);
 
   const validateForm = () => {
-    const newErrors: { name?: string; email?: string; password?: string; phone?: string; street?: string } = {};
+    const newErrors: {
+      name?: string;
+      email?: string;
+      password?: string;
+      phone?: string;
+      street?: string;
+    } = {};
     if (!formData.name) newErrors.name = "Name is required.";
     if (!formData.email) newErrors.email = "Email is required.";
     if (!formData.password) newErrors.password = "Password is required.";
     if (!formData.phone) newErrors.phone = "Phone number is required.";
-    if (!formData.refID.address.street) newErrors.street = "Street address is required.";
+    if (!formData.refID.address.street)
+      newErrors.street = "Street address is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -89,7 +137,8 @@ export default function ProfilePage() {
       // console.error("Error updating user:", error);
       toast({
         title: "Update Failed",
-        description: "There was an error updating your profile. Please try again.",
+        description:
+          "There was an error updating your profile. Please try again.",
         variant: "destructive",
       });
     }
@@ -105,14 +154,19 @@ export default function ProfilePage() {
     window.location.href = "/login";
   };
 
-  const formattedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-  }) : "";
+  const formattedDate = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+      })
+    : "";
 
-  const recentOrders = orders.slice(0, 3)
+  const recentOrders = orders.slice(0, 3);
 
-  const showBrowserNotification = (notification: { title: string; message: string }): void => {
+  const showBrowserNotification = (notification: {
+    title: string;
+    message: string;
+  }): void => {
     console.log("Attempting to show notification:", notification);
 
     if (!("Notification" in window)) {
@@ -133,40 +187,49 @@ export default function ProfilePage() {
     } else if (Notification.permission === "denied") {
       console.warn("Notification permission was denied by the user.");
     } else {
-      console.warn("Notification permission is not granted. Current state:", Notification.permission);
+      console.warn(
+        "Notification permission is not granted. Current state:",
+        Notification.permission
+      );
     }
   };
 
-  const getAllNotifications = useCallback(async (userId: string): Promise<any> => {
-    try {
-      const response = await getNotificationsByUser(userId);
-      setNotificationsFetched(true);
-      if (response.status === 200) {
-        const sortedNotifications = (response.data as any[]).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setNotifications(sortedNotifications);
-        sortedNotifications.forEach((notification) => {
-          if (!notification.isRead) {
-            showBrowserNotification(notification);
-          }
-        });
-      } else {
+  const getAllNotifications = useCallback(
+    async (userId: string): Promise<any> => {
+      try {
+        const response = await getNotificationsByUser(userId);
         setNotificationsFetched(true);
+        if (response.status === 200) {
+          const sortedNotifications = (response.data as any[]).sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setNotifications(sortedNotifications);
+          sortedNotifications.forEach((notification) => {
+            if (!notification.isRead) {
+              showBrowserNotification(notification);
+            }
+          });
+        } else {
+          setNotificationsFetched(true);
+          toast({
+            title: "Error",
+            description: "Failed to fetch notifications.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        setNotificationsFetched(true);
+        // console.error("Error fetching notifications:", error);
         toast({
           title: "Error",
           description: "Failed to fetch notifications.",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      setNotificationsFetched(true);
-      // console.error("Error fetching notifications:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch notifications.",
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   useEffect(() => {
     if (user && !notificationsFetched) {
@@ -188,7 +251,9 @@ export default function ProfilePage() {
       // Call the API to delete the notification
       await deleteNotification(notificationId);
       // await deleteNotification(notificationId);
-      setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== notificationId)
+      );
       toast({
         title: "Notification Deleted",
         description: "The notification has been deleted successfully.",
@@ -196,7 +261,6 @@ export default function ProfilePage() {
       });
       // Instead of reloading, just update the notifications state to trigger a re-render
       getAllNotifications(user._id);
-
     } catch (error) {
       // console.error("Error deleting notification:", error);
       toast({
@@ -216,7 +280,9 @@ export default function ProfilePage() {
       });
       setNotifications((prev) =>
         prev.map((notification) =>
-          notification._id === notificationId ? { ...notification, isRead: true } : notification
+          notification._id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
         )
       );
     } catch (error) {
@@ -248,19 +314,29 @@ export default function ProfilePage() {
                   />
                 </div>
                 <CardTitle className="text-lg font-semibold">
-                  {user?.name || user?.email?.split("@")[0]?.charAt(0).toUpperCase() + user?.email?.split("@")[0]?.slice(1) || "John Doe"}</CardTitle>
-                <CardDescription>{user?.email || "john.doe@example.com"}</CardDescription>
+                  {user?.name ||
+                    user?.email?.split("@")[0]?.charAt(0).toUpperCase() +
+                      user?.email?.split("@")[0]?.slice(1) ||
+                    "John Doe"}
+                </CardTitle>
+                <CardDescription>
+                  {user?.email || "john.doe@example.com"}
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{user?.refID?.address?.street || ""}</span>
+                  <span className="text-sm">
+                    {user?.refID?.address?.street || ""}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">Member since {formattedDate || "Jan 2023"}</span>
+                  <span className="text-sm">
+                    Member since {formattedDate || "Jan 2023"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-gray-500" />
@@ -269,7 +345,11 @@ export default function ProfilePage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => setIsDialogOpen(true)}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsDialogOpen(true)}
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
@@ -298,7 +378,9 @@ export default function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Logout</CardTitle>
-              <CardDescription>Click the button below to log out of your account.</CardDescription>
+              <CardDescription>
+                Click the button below to log out of your account.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button
@@ -310,7 +392,7 @@ export default function ProfilePage() {
               </Button>
             </CardContent>
           </Card>
-        </div >
+        </div>
 
         <div className="md:col-span-2">
           <Tabs defaultValue="notifications" className="w-full">
@@ -390,15 +472,20 @@ export default function ProfilePage() {
                       ) => (
                         <div
                           key={index}
-                          className={`border rounded-lg p-4 flex justify-between items-start ${notification.isRead ? "bg-gray-50" : "bg-blue-100"
-                            }`}
+                          className={`border rounded-lg p-4 flex justify-between items-start ${
+                            notification.isRead ? "bg-gray-50" : "bg-blue-100"
+                          }`}
                         >
                           <div>
                             <p className="font-medium">{notification.title}</p>
-                            <p className="text-sm text-gray-500">{notification.message}</p>
+                            <p className="text-sm text-gray-500">
+                              {notification.message}
+                            </p>
                             {notification.createdAt && (
                               <p className="text-xs text-gray-400 mt-1">
-                                {new Date(notification.createdAt).toLocaleString("en-US", {
+                                {new Date(
+                                  notification.createdAt
+                                ).toLocaleString("en-US", {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
@@ -417,7 +504,9 @@ export default function ProfilePage() {
                                   handleMarkAsRead(notification._id);
                                   setNotifications((prev) =>
                                     prev.map((n) =>
-                                      n._id === notification._id ? { ...n, read: true } : n
+                                      n._id === notification._id
+                                        ? { ...n, read: true }
+                                        : n
                                     )
                                   );
                                 }}
@@ -427,7 +516,9 @@ export default function ProfilePage() {
                             )}
                             <Button
                               variant="destructive"
-                              onClick={() => handleDeleteNotification(notification._id)}
+                              onClick={() =>
+                                handleDeleteNotification(notification._id)
+                              }
                             >
                               <Trash2 className="h-5 w-5" />
                             </Button>
@@ -443,7 +534,7 @@ export default function ProfilePage() {
             </TabsContent>
           </Tabs>
         </div>
-      </div >
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -460,7 +551,9 @@ export default function ProfilePage() {
                 value={formData.name || ""}
                 onChange={handleInputChange}
               />
-              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-red-500 text-sm">{errors.name}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
@@ -471,7 +564,9 @@ export default function ProfilePage() {
                 value={formData.email}
                 onChange={handleInputChange}
               />
-              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
@@ -489,10 +584,16 @@ export default function ProfilePage() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="phone">Phone</Label>
@@ -503,7 +604,9 @@ export default function ProfilePage() {
                 value={formData.phone}
                 onChange={handleInputChange}
               />
-              {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-red-500 text-sm">{errors.phone}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="street">Street Address</Label>
@@ -514,7 +617,9 @@ export default function ProfilePage() {
                 value={formData.refID.address.street}
                 onChange={handleAddressChange}
               />
-              {errors.street && <p className="text-red-500 text-sm">{errors.street}</p>}
+              {errors.street && (
+                <p className="text-red-500 text-sm">{errors.street}</p>
+              )}
             </div>
           </form>
           <DialogFooter>
@@ -527,6 +632,6 @@ export default function ProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div >
-  )
+    </div>
+  );
 }
