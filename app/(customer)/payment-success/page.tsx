@@ -5,7 +5,12 @@ import { Separator } from "@/components/ui/separator";
 import { ToastAction } from "@/components/ui/toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { createNotification, sendEmailNotification, sendSMSNotification } from "@/lib/api/notificationApi";
+import { removeItemFromCart } from "@/lib/api/cartApi";
+import {
+  createNotification,
+  sendEmailNotification,
+  sendSMSNotification,
+} from "@/lib/api/notificationApi";
 import { createNewOrder } from "@/lib/api/orderApi";
 import { createNewTransaction } from "@/lib/api/paymentApi";
 import { CircleCheckIcon } from "lucide-react";
@@ -38,7 +43,6 @@ export default function PaymentSuccess({
       handleCreateOrder();
     }
   }, [order, payment_intent, redirect_status]);
-
 
   const handleCreateOrder = async () => {
     try {
@@ -92,6 +96,15 @@ export default function PaymentSuccess({
             variant: "default",
           });
 
+          const cartData = {
+            cartId: order.cartId,
+            updates: {
+              type: "clear" as "clear",
+            },
+          };
+
+          await removeItemFromCart(cartData);
+
           // Explicitly type the response data
           const responseData = response.data as { _id: string };
 
@@ -124,7 +137,11 @@ export default function PaymentSuccess({
 
           const smsData = {
             to: "94774338424", // Use phone from deliveryAddress if available
-            message: `MealWhirl\n\nHi ${user?.name || "Customer"},\nYour order has been placed successfully!\nItems: ${order.items.map((item: any) => `${item.itemName} x${item.quentity}`).join(", ")}\n\nTotal: Rs. ${order.totalAmount}`,
+            message: `MealWhirl\n\nHi ${
+              user?.name || "Customer"
+            },\nYour order has been placed successfully!\nItems: ${order.items
+              .map((item: any) => `${item.itemName} x${item.quentity}`)
+              .join(", ")}\n\nTotal: Rs. ${order.totalAmount}`,
           };
 
           try {
@@ -149,7 +166,9 @@ export default function PaymentSuccess({
             title: "Order Placed Successfully",
             message: `Your order has been placed successfully!\n\nItems: ${order.items
               .map((item: any) => `${item.itemName} x${item.quentity}`)
-              .join(", ")}\nTotal Amount: Rs. ${order.totalAmount}\nThank you for choosing MealWhirl.`,
+              .join(", ")}\nTotal Amount: Rs. ${
+              order.totalAmount
+            }\nThank you for choosing MealWhirl.`,
           };
 
           try {
@@ -168,9 +187,13 @@ export default function PaymentSuccess({
           const restaurantNotification = {
             userId: order.restaurantId, // Use the actual restaurant user ID
             title: "New Order Received",
-            message: `A new order has been placed!\n\nOrder ID: ${responseData._id}\nItems: ${order.items
+            message: `A new order has been placed!\n\nOrder ID: ${
+              responseData._id
+            }\nItems: ${order.items
               .map((item: any) => `${item.itemName} x${item.quentity}`)
-              .join(", ")}\nTotal Amount: Rs. ${order.totalAmount}\nPlease prepare the order.`,
+              .join(", ")}\nTotal Amount: Rs. ${
+              order.totalAmount
+            }\nPlease prepare the order.`,
           };
 
           try {
