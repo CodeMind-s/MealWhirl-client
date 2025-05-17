@@ -26,8 +26,8 @@ import { useAuth } from "@/contexts/auth-context";
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("ALL");
   const [userId, setUserId] = useState<string | null>(null);
-  const [userOrders, setUserOrders] = useState<any[]>([ ]);
-  const {user } = useAuth();
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -36,34 +36,35 @@ export default function OrdersPage() {
   }, [user]);
 
   useEffect(() => {
-      const fetchOrderDetails = async () => {
-        try {
-          const response: any = await getOrdersByUserId(userId as string);
-          if (response.data) {
-            const ordersData = response.data.sort((a: any, b: any) => {
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-            setUserOrders(ordersData);
-          }
-        } catch (err: any) {
-          if (err.response) {
-            const { data } = err.response;
-
-            if (data && data.message) {
-              console.log(`Order Details Fetching Faild: ${data.message}`);
-            } else {
-              console.log("An unexpected error occurred. Please try again.");
-            }
-          } else {
-            console.log(
-              "An unexpected error occurred. Please check your network and try again."
-            );
-          }
+    if (!userId) return; // Prevent fetch if userId is not set
+    const fetchOrderDetails = async () => {
+      try {
+        const response: any = await getOrdersByUserId(userId as string);
+        if (response.data) {
+          const ordersData = response.data.sort((a: any, b: any) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+          setUserOrders(ordersData);
         }
-      };
+      } catch (err: any) {
+        if (err.response) {
+          const { data } = err.response;
 
-      fetchOrderDetails();
-    }, [userId]);
+          if (data && data.message) {
+            console.log(`Order Details Fetching Faild: ${data.message}`);
+          } else {
+            console.log("An unexpected error occurred. Please try again.");
+          }
+        } else {
+          console.log(
+            "An unexpected error occurred. Please check your network and try again."
+          );
+        }
+      }
+    };
+
+    fetchOrderDetails();
+  }, [userId]);
 
   // Filter orders based on active tab
   const filteredOrders = userOrders.filter((order) => {
@@ -215,7 +216,7 @@ export default function OrdersPage() {
                   <div>
                     <h3 className="font-medium text-lg">Restaurant name</h3>
                     <div className="text-sm text-gray-500 mt-1">
-                      {order.items.map((item:any, index:number) => (
+                      {order.items.map((item: any, index: number) => (
                         <span key={index}>
                           {item.quentity} × {item.itemName}
                           {index < order.items.length - 1 ? ", " : ""}
